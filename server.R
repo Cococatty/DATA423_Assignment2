@@ -12,6 +12,12 @@ library(shiny)
 # Define server logic required to draw a histogram
 shinyServer(function(input, output) {
 
+    output$summaryDT <- renderPrint(
+        print(dfSummary(sourceDT, graph.magnif = 0.8), 
+              method = "render",
+              headings = TRUE,
+              bootstrap.css = FALSE)
+        )
     output$distPlot <- renderPlot({
 
         # generate bins based on input$bins from ui.R
