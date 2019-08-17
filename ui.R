@@ -3,36 +3,43 @@
 
 library(shiny)
 library(shinydashboard)
-library(shinythemes)
-source("server.R")
+# library(shinythemes)
+# source("server.R")
 
 # Define UI for application that draws a histogram
-shinyUI(dashboardPage(skin = "yellow",
-    dashboardHeader(title = "Assignment 2 - Yongyan (Carina) Zheng, 85424581)"
-                    , titleWidth = 500),
-    dashboardSidebar(
-        sidebarMenu(
-            menuItem("EDA", tabName = "eda", icon = icon("eye"))
-        )
-    ),
-    dashboardBody(
-        ###########             MAIN PANEL             ###########
-        fluidRow(
-            tabItems(
-                ###########             EDA Tab              ###########    
-                tabItem(tabName = "eda"
-                        , tabsetPanel(
-                            tabPanel("Basic Data Overview"
-                                     , htmlOutput("summaryDT")
-                            )
-                            , tabPanel("Look at the data with theory"
-                                       , h3("Data Role")
-                            )
-                        ))
+shinyUI(
+    dashboardPage(skin = "yellow",
+        dashboardHeader(title = "Assignment 2 - Yongyan (Carina) Zheng, 85424581)", titleWidth = 500),
+        dashboardSidebar(
+            sidebarMenu(
+                        menuItem("Explore the data", tabName = "eda", icon = icon("eye")),
+                        menuItem("Understand the data", tabName = "classification", icon = icon("user"))
+        )),
+        dashboardBody(
+            fluidRow(
+                tabItems(
+                    ###########             EDA Tab              ###########    
+                    tabItem(tabName = "eda"
+                            , tabsetPanel(
+                                tabPanel("Data Structure and Types"
+                                         , h3("Data ")
+                                )
+                                , tabPanel("High-level Data Overview", htmlOutput("summaryDT")
+                                ))
+                            
+                    )        
+                    ###########             classification Tab             ###########
+                    , tabItem(tabName = "classification"
+                              , tabsetPanel(
+                                  tabPanel( tabName = "Implement Classification"
+                                            , h3("Select Sensor Data to view additional boxplot")
+                                  )
+                      ## Closure - classification Tab
+                          ))
+                    ## Closure - tabItems
+                )
             )
-        )
-    )
-    ## dashboardBody End
-)
-)
-
+            ## dashboardBody End
+            )
+        ## END OF shinyUI and dashboardPage
+        ))
