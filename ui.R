@@ -12,20 +12,33 @@ shinyUI(
         dashboardHeader(title = "Assignment 2 - Yongyan (Carina) Zheng, 85424581)", titleWidth = 500),
         dashboardSidebar(
             sidebarMenu(
-                        menuItem("Explore the data", tabName = "eda", icon = icon("eye")),
-                        menuItem("Understand the data", tabName = "classification", icon = icon("user"))
+                        menuItem("Explore to understand the data", tabName = "eda", icon = icon("eye")),
+                        # menuItem("Understand the data", tabName = "eda", icon = icon("user")),
+                        menuItem("Classification", tabName = "classification", icon = icon("studiovinari"))
         )),
         dashboardBody(
             fluidRow(
                 tabItems(
-                    ###########             EDA Tab              ###########    
+                    ###########             Explore and EDA Tab              ###########    
                     tabItem(tabName = "eda"
                             , tabsetPanel(
-                                tabPanel("Data Structure and Types"
-                                         , h3("Data ")
+                                tabPanel("The first Impression"
+                                         , textOutput("edaTextAboutThisProject")
+                                         , textOutput("edaTextFirstImpression")
+                                         , textOutput("edaTextFindFromSummary")
+                                         )
+                                , tabPanel("Original data", htmlOutput("summarySourceDT"))
+                                , tabPanel("Processed data", htmlOutput("summaryFormattedDT"))
+                                # , tabPanel("Data Info",
+                                #          fluidRow(
+                                #              infoBoxOutput("infoBoxNrow")
+                                #          )
+                                # )
+                                # , tabPanel("Data Overview - Before Formatting", htmlOutput("summarySourceDT"))
+                                
+                                
+                                # , tabPanel("Define the question", textOutput("edaFirstImpression"))
                                 )
-                                , tabPanel("High-level Data Overview", htmlOutput("summaryDT")
-                                ))
                             
                     )        
                     ###########             classification Tab             ###########
