@@ -32,18 +32,64 @@ cleanseData <- function() {
     Sleep = Sleep,
     PhysActive = PhysActive,
     HrsHomework = HrsHomework,
-    SpendTime1 = factor(SpendTime1),
-    SpendTime2 = factor(SpendTime2),
-    Self1 = Self1,
-    Self1_factor = factor(Self1),
-    Self2 = Self2,
-    Self2_factor = factor(Self2),
-    Career = Career,
-    Career_factor = factor(Career),
-    Superpower = Superpower,
-    Superpower_factor = factor(Superpower)
+    SpendTime1 = trimws(SpendTime1),
+    SpendTime2 = trimws(SpendTime2),
+    Self1 = trimws(Self1),
+    Self2 = trimws(Self2),
+    Superpower = trimws(Superpower),
+    Career = trimws(Career)
     )]
   
+  formattedDT <- sourceDT[, ':=' (
+    SpendTime1_factor = factor(SpendTime1),
+    SpendTime2_factor = factor(SpendTime2),
+    Self1_factor = factor(Self1),
+    Self2_factor = factor(Self2),
+    Career_factor = factor(Career),
+    Superpower_factor = factor(Superpower)
+  )]
+  
+  
+  spendTimeCategories <- list(
+    Sport = list("swimming", "biking", "playing outside")
+  )
+  
+  
+  sourceList <- spendTimeCategories
+  # delistForSQL_GLAccountsKeywords <- function(sourceList) {
+    
+    # currentID <- 1
+    
+    i <- "Sport"
+    colToCheck <- "SpendTime2"
+    
+    ##  Otherwise, assign Expense Category by setup in acctKeywordsList
+    for (i in names(sourceList)) {
+      # print(i)
+      lsKeys <- unlist(sourceList[i])
+      formattedDT[, paste(colToCheck, "check", sep = "_") := 
+                    grepl(pattern = paste0(lsKeys, collapse = "|")
+                       , x = formattedDT[, mget(colToCheck)]
+                       , ignore.case = TRUE)]
+      
+      library(dplyr)
+      formattedDT %>% 
+        rowwise() %>% 
+        mutate(Matches = grepl(pattern = paste0(lsKeys, collapse = "|"), formattedDT[, mget(colToCheck)]
+                               ))  
+      
+      df$Matches <- mapply(grepl, df$pattern, df$string)
+      
+      strKeys <- mapply(grepl, paste0(lsKeys, collapse = "|"), formattedDT[, mget(colToCheck)], ignore.case = TRUE)
+      # print(paste0(lsKeys, collapse = "|"))
+      formattedDT[, col2 := "tst"][col2 == "1", col2 := "bigDog"]
+      formattedDT[strKeys == TRUE, paste(colToCheck, "Category", sep = "_") := i]
+    }
+
+  
+  
+
+    
   factorsDT <<- Filter(is.factor, formattedDT)
   factorNames <- names(factorsDT)
   overallResult <<- ""
