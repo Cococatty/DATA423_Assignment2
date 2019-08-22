@@ -28,3 +28,30 @@ pie(rep(1, n), labels = "", col = rainbow(n), border = NA,
 pie(c(Sky = 78, "Sunny side of pyramid" = 17, "Shady side of pyramid" = 5),
     init.angle = 315, col = c("deepskyblue", "yellow", "yellow3"), border = FALSE)
 
+
+
+##---------------------               NEW
+##
+##
+
+install.packages("recipes")
+library(recipes)
+data(biomass)
+summary(biomass)
+
+biomass_te <- biomass[biomass$dataset == "Testing",]
+exNumericCols <- unlist(lapply(biomass_te, is.numeric)) 
+std <- scale(biomass_te[,exNumericCols, drop = FALSE], center = TRUE, scale = TRUE)
+d <- tidyr::gather(as.data.frame(std))
+d <- data.table(d)
+ggplot(mapping = aes(x = d$key, y = d$value, fill = d$key)) +
+  geom_boxplot(coef = 1.5, outlier.colour = "red") +
+  labs(title = paste("Raw Uni-variable boxplots at IQR multiplier of", 1.5),
+       x = "Standardised variable value", y = "Std Value") +
+  coord_flip()
+class(d)
+
+
+
+
+

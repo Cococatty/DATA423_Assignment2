@@ -6,222 +6,51 @@
 library(readr, quietly = TRUE)
 library(shiny, quietly = TRUE)
 library(dashboard, quietly = TRUE)
-library(data.table, quietly = TRUE)
 
-library(summarytools)
-library(googleVis)
+library(Stat2Data)
+library(data.table, quietly = TRUE)
+library(ggplot2, quietly = TRUE)
+library(summarytools, quietly = TRUE)
+library(googleVis, quietly = TRUE)
 
 
 # Read in the data set
-sourceData <- read_csv(file = "FinalData.csv")
-sourceDT <<- data.table(sourceData) 
 
-# str(sourceDT)
-# str(formattedDT)
-
-cleanseData <- function() {
-  formattedDT <- sourceDT[, ':=' (
-    ID = ID,
-    Gender = as.factor(Gender),
-    Grade = factor(Grade),
-    Horoscope = factor(Horoscope),
-    Subject = factor(Subject),
-    IntExt = factor(IntExt),
-    OptPest = factor(IntExt),
-    ScreenTime = ScreenTime,
-    Sleep = Sleep,
-    PhysActive = PhysActive,
-    HrsHomework = HrsHomework,
-    SpendTime1 = trimws(SpendTime1),
-    SpendTime2 = trimws(SpendTime2),
-    Self1 = trimws(Self1),
-    Self2 = trimws(Self2),
-    Superpower = trimws(Superpower),
-    Career = trimws(Career)
-    )]
-  
-  formattedDT <- sourceDT[, ':=' (
-    SpendTime1_factor = factor(SpendTime1),
-    SpendTime2_factor = factor(SpendTime2),
-    Self1_factor = factor(Self1),
-    Self2_factor = factor(Self2),
-    Career_factor = factor(Career),
-    Superpower_factor = factor(Superpower)
-  )]
-  
-  
-  spendTimeCategories <- list(
-    Sport = list("swimming", "biking", "playing outside")
-  )
-  
-  
-  sourceList <- spendTimeCategories
-  # delistForSQL_GLAccountsKeywords <- function(sourceList) {
-    
-    # currentID <- 1
-    
-    i <- "Sport"
-    colToCheck <- "SpendTime2"
-    
-    ##  Otherwise, assign Expense Category by setup in acctKeywordsList
-    for (i in names(sourceList)) {
-      # print(i)
-      lsKeys <- unlist(sourceList[i])
-      formattedDT[, paste(colToCheck, "check", sep = "_") := 
-                    grepl(pattern = paste0(lsKeys, collapse = "|")
-                       , x = formattedDT[, mget(colToCheck)]
-                       , ignore.case = TRUE)]
-      
-      library(dplyr)
-      formattedDT %>% 
-        rowwise() %>% 
-        mutate(Matches = grepl(pattern = paste0(lsKeys, collapse = "|"), formattedDT[, mget(colToCheck)]
-                               ))  
-      
-      df$Matches <- mapply(grepl, df$pattern, df$string)
-      
-      strKeys <- mapply(grepl, paste0(lsKeys, collapse = "|"), formattedDT[, mget(colToCheck)], ignore.case = TRUE)
-      # print(paste0(lsKeys, collapse = "|"))
-      formattedDT[, col2 := "tst"][col2 == "1", col2 := "bigDog"]
-      formattedDT[strKeys == TRUE, paste(colToCheck, "Category", sep = "_") := i]
-    }
-
-  
-  
-
-    
-  factorsDT <<- Filter(is.factor, formattedDT)
-  factorNames <- names(factorsDT)
-  overallResult <<- ""
-  
-  for ( i in 1:length(factorNames) ) {
-    v <- factorNames[i]
-    currentValues <- formattedDT[, get(v)]
-    currentLevels <- length(unique(currentValues))
-    lowerCaseLevels <- length(unique(tolower(currentValues)))
-    # print(i)
-    
-    if (currentLevels != lowerCaseLevels) {
-      overallResult <<- paste(overallResult
-                              , v, "have", currentLevels
-                              , "unique values; with lower case modification, there exist"
-                              , lowerCaseLevels, "unique values."
-                              , "Therefore, value cleansing is required."
-                              , sep = "\n")
-      
-      ## Change values to all lower cases
-      formattedDT <<- formattedDT[, as.character(v) := tolower(currentValues)]
-    }
-  }
-}
-
-cleanseData()
-View(formattedDT)
-
-basicEDA <- function() {
-  # str(sourceDT)
-  # summary(sourceDT)
- 
-}
+data("Diamonds2")
+diamondsData <- Diamonds2
+  # diamonds
+summary(diamondsData)
 
 
-development <- function() {
-  View(sourceDT)
-  names(sourceDT)
-  
-  summary(sourceDT)
-  
-  view(dfSummary(sourceDT))
-  
-  summaryTEST <- dfSummary(sourceDT)
-  str(summaryTEST)
-  
- 
-}
+dfSummary(diamondsData)
 
 
-  # print(overallResult)
-# formattedDT <<- 
-pieChartsEDA <- function() {
-  names(formattedDT)
-  summary(formattedDT$ID)
-  
-  # piechartDF <- data.frame(formattedDT[, -c("ID")])
-  
-  lenCol <- length(names(formattedDT))
-  levels(formattedDT)
-  str(formattedDT)
-  str(formattedDT$Gender)
-  is.factor(formattedDT$Gender)
-  class(formattedDT$Gender)
-  class(formattedDT)
-  levels(formattedDT$Gender)
-  
-  library(plyr)
-  
-  totalNumFactor <- length(factorNames)
-  
-  par(mfrow=c(round(totalNumFactor/4), 4))
-  
-  ## Initial plot
-  freqData <- count(factorsData, vars = factorNames[1])
-  # pie(freqData$freq, labels = freqData$Gender)
-  ?pie
-  pieCharts <- gvisPieChart(freqData)
-  freqData <- count(factorsData, vars = factorNames[2])
-  nextChart <- gvisPieChart(freqData)
-  
-  pieCharts <- gvisMerge(nextChart, pieCharts
-                         , horizontal=FALSE, tableOptions="bgcolor=\"#AABBCC\""
-                         # ,tableOptions="cellspacing=10"
-                         # horizontal = TRUE, tableOptions = "border=\"0\"",
-                         # chartid = i
-  )
-  plot(pieCharts)
-  # rm(pieCharts)
-  # for (i in factorNames[2:4]) {
-  #   # print(i)
-  #   freqData <- count(factorsData, vars = i)
-  #   # print(freqData)
-  #   currentPie <- gvisPieChart(freqData)
-  #   plot(currentPie)
-  #   # pie(freqData)
-  #   pieCharts <- gvisMerge(currentPie, pieCharts
-  #                          , horizontal=TRUE,
-  #                          tableOptions="cellspacing=10"
-  #                          # horizontal = TRUE, tableOptions = "border=\"0\"",
-  #                          # chartid = i
-  #                          )
-  # }
-  plot(pieCharts)  
-  # ?par
-}
+# attach(Diamonds2)
+# library(rpart)
+# library(rpart.plot)
+# formula <- Color ~ .
+# fit <- rpart(formula, Diamonds2, method = "class") # predicted class; predicted probability of survivals; percentage of observations
+# rpart.plot(fit, type = 4)
 
-checkVariables <- function(threshhold) {
-  novelDT <- data.table(colName = character(), classType = character(), ratio = numeric(), result = character())
-  
-  # for (col in colnames(refreshAppDT())) {
-  #   classPro <- class(refreshAppDT()[, col])
-  #   ratio <-
-  #     round(length(unique(refreshAppDT()[, col])) / nrow(refreshAppDT()), 2)
-  #   
-  #   if (ratio == 1) {
-  #     result <- "continuous"
-  #   } else if (ratio > input$novelThreshold) {
-  #     result <- "as good as continuous"
-  #   } else {
-  #     result <- "not continuous"
-  #   }
-  #   novelDT <- rbind(novelDT, list(col, classPro, ratio, result))
-  # }
-  # novelDT
-}
-
-###########             Explore and EDA Tab TEXT              ###########
+# or use draw.tree; can you find the difference
+# install.packages("cluster")
+# library(maptree)
+# library(cluster)
+# plot(as.party(fit))
+# draw.tree(fit)
 
 
-# edaFirstImpression <- 
 
-# df <- read_csv('https://raw.githubusercontent.com/lgellis/STEM/master/DATA-ART-1/Data/FinalData.csv', col_names = TRUE)
+
+
+
+multiplier <- 1.5
+numericCols <- unlist(lapply(diamondsData, is.numeric)) 
+factorCols <- unlist(lapply(diamondsData, is.factor)) 
+
+# boxplot(diamondsData[, c(numericCols)])
 # 
-# detach("package:shinythemes", unload = TRUE)
+# boxplot <- gvisCandlestickChart(diamondsData[, c(numericCols)], 
+#                                options=list(legend='none'))
+
+# detach(Diamonds2)
