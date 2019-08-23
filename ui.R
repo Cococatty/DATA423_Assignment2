@@ -23,11 +23,11 @@ shinyUI(dashboardPage(skin = "yellow"
             tabName = "aboutProject"
             , tabsetPanel(
                 tabPanel("About this project"
-                         , textOutput("edaTextAboutProject"))
+                         , textOutput("edaTextAboutProject")
+                         , img(src = "Amazon-rainforest-fire-1168299.jpg")
+                         )
                 , tabPanel("The first Impression"
                          , textOutput("edaTextFirstImpression")
-                         # , textOutput("edaTextFirstImpression")
-                         # , textOutput("edaTextFindFromSummary")
                          )
                 )
             ## Closure - aboutProject
@@ -50,10 +50,10 @@ shinyUI(dashboardPage(skin = "yellow"
                             , h3("Boxplot of source numeric variables")
                             , plotOutput("edaSourceBoxplot")
                             , h3("Barchart of source factor variables")
-                            , plotOutput("edaSourceBarchart")
+                            , htmlOutput("edaSourceBarchart")
                             )
                          ###########             Source Data Plan Tab              ###########
-                         , tabPanel("What shall I do?"
+                         , tabPanel("What next?"
                                     , textOutput("edaSourcePlan")
                                     )
                         ## Closure - Source Data mainPanel
@@ -82,8 +82,9 @@ shinyUI(dashboardPage(skin = "yellow"
                          , tabPanel("Cleansed Data Visualization"
                             , h3("Boxplot of Cleansed numeric variables")
                             , plotOutput("edaCleansedBoxplot")
-                            , h3("Barchart of Cleansed factor variables")
-                            , plotOutput("edaCleansedBarchart")
+                            , h3("Frequency Barchart of Cleansed factor variables")
+                            , h4("Hover on the bar to see full details!")
+                            , htmlOutput("edaCleansedBarchart")
                             )
                         ## Closure - Cleansed Data mainPanel
                         )

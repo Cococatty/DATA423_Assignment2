@@ -17,63 +17,60 @@ library(ggplot2, quietly = TRUE)
 allWoodData <- read.delim("2015-yield-tables-Canterbury.tsv", header = TRUE, sep = "\t")
 canterburyWood <- subset(allWoodData, Wood.Supply.Region == "Canterbury") 
 canterburyWood <- droplevels.data.frame(canterburyWood)
+numericColsCanta <<- unlist(lapply(canterburyWood, is.numeric)) 
+factorColsCanta <<- unlist(lapply(canterburyWood, is.factor))
+  
+# multiplier <- 1.5
 
-multiplier <- 1.5
+# basicDataCleansing <- function() {
+# DROP COLUMNS THAT HAVE ONLY ONE LEVEL
+canterburyWoodCleaned <<- canterburyWood[, sapply(canterburyWood, function(col) length(unique(col))) > 1]
+## Fix column names
+names(canterburyWoodCleaned) <- gsub("\\.\\.", ".", names(canterburyWoodCleaned))
 
-basicDataCleansing <- function() {
-  # DROP COLUMNS THAT HAVE ONLY ONE LEVEL
-  canterburyWoodCleaned <<- canterburyWood[, sapply(canterburyWood, function(col) length(unique(col))) > 1]
-  numericCols <<- unlist(lapply(canterburyWoodCleaned, is.numeric)) 
-  factorCols <<- unlist(lapply(canterburyWoodCleaned, is.factor))
+numericColsCleansed <<- unlist(lapply(canterburyWoodCleaned, is.numeric)) 
+numericColsCleansed <<- numericColsCleansed[ numericColsCleansed == TRUE]
+
+factorColsCleansed <<- unlist(lapply(canterburyWoodCleaned, is.factor))
+factorColsCleansed <<- factorColsCleansed[ factorColsCleansed == TRUE]
+# }
+
+
+########      PLOT GOOGLE VIS COLUMN CHART (BARCHART)
+plotGVisColChart <- function(dataToPlot, factorList) {
+  gVisColChartList <- list()
+  dataToPlot <- canterburyWoodCleaned
+  factorList <- factorColsCleansed
+  
+  for (i in names(factorList)) {
+    currentFreqDF <- as.data.frame( table(dataToPlot[, i]) )
+                                    #, dnn = c("tes", "Freq")
+                                    
+    currentFreqDF$Freq.style <- c("orange") #rainbow(nrow(currentFreqDF))
+    
+    ## Fix names
+    names(currentFreqDF)[names(currentFreqDF) == "Var1"] <- i
+    
+    currentVisColPlot <- gvisColumnChart(currentFreqDF, xvar = i, yvar = c("Freq", "Freq.style")
+                                         , options = list(
+                                           title = paste("Barchart of", i, sep = " ")
+                                           , legend = "none"
+                                         )
+    )
+    # plot(currentVisColPlot)
+    gVisColChartList[[i]] <- currentVisColPlot
+  }
+ 
+  visPlotList <- Reduce(gvisMerge, gVisColChartList) #, horizontal=TRUE
+  return(visPlotList)
 }
-
 
 dev <- function() {
-  summary(canterburyWood)
-  dfSummary(canterburyWood)
-    
-    
-  ?subset
-  class(canterburyWood)
-  str(canterburyWood)
-  # type(canterburyWood)
-  levels(canterburyWood$Pulplog.thinnings..m3.ha.)
-  
-  str(canterburyWood)
-  unique(canterburyWood)
-  
-  lapply(canterburyWood, unique)
-  
-  levels(woodData)
-  View(canterburyWood)
-
-
-
+  ?gvisColumnChart
 }
 
-
-
-# attach(Diamonds2)
-# library(rpart)
-# library(rpart.plot)
-# formula <- Color ~ .
-# fit <- rpart(formula, Diamonds2, method = "class") # predicted class; predicted probability of survivals; percentage of observations
-# rpart.plot(fit, type = 4)
-
-# or use draw.tree; can you find the difference
-# install.packages("cluster")
-# library(maptree)
-# library(cluster)
-# plot(as.party(fit))
-# draw.tree(fit)
-
-
-
-
-
-# boxplot(woodData[, c(numericCols)])
-# 
-# boxplot <- gvisCandlestickChart(woodData[, c(numericCols)], 
-#                                options=list(legend='none'))
-
-# detach(Diamonds2)
+# i <- "Species"
+# i <- "Age.years."
+# print(i)
+    
+    

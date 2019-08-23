@@ -1,6 +1,7 @@
 
-Column <- gvisColumnChart(diamondsDT[, factorCols])
-Column <- gvisColumnChart(diamondsData[, "cut"])
+Column <- gvisColumnChart(canterburyWoodCleaned[, factorCols])
+Column <- gvisColumnChart(canterburyWoodCleaned[, Owner.size ])
+names(canterburyWoodCleaned)
 plot(Column)
 ?table
 
