@@ -13,17 +13,44 @@ library(googleVis, quietly = TRUE)
 
 library(ggplot2, quietly = TRUE)
 # library(Stat2Data)
-
-
 # Read in the data set
+allWoodData <- read.delim("2015-yield-tables-Canterbury.tsv", header = TRUE, sep = "\t")
+canterburyWood <- subset(allWoodData, Wood.Supply.Region == "Canterbury") 
+canterburyWood <- droplevels.data.frame(canterburyWood)
 
-data("Diamonds2")
-diamondsData <- Diamonds2
-  # diamonds
-summary(diamondsData)
+multiplier <- 1.5
+
+basicDataCleansing <- function() {
+  # DROP COLUMNS THAT HAVE ONLY ONE LEVEL
+  canterburyWoodCleaned <<- canterburyWood[, sapply(canterburyWood, function(col) length(unique(col))) > 1]
+  numericCols <<- unlist(lapply(canterburyWoodCleaned, is.numeric)) 
+  factorCols <<- unlist(lapply(canterburyWoodCleaned, is.factor))
+}
 
 
-dfSummary(diamondsData)
+dev <- function() {
+  summary(canterburyWood)
+  dfSummary(canterburyWood)
+    
+    
+  ?subset
+  class(canterburyWood)
+  str(canterburyWood)
+  # type(canterburyWood)
+  levels(canterburyWood$Pulplog.thinnings..m3.ha.)
+  
+  str(canterburyWood)
+  unique(canterburyWood)
+  
+  lapply(canterburyWood, unique)
+  
+  levels(woodData)
+  View(canterburyWood)
+
+
+
+}
+
 
 
 # attach(Diamonds2)
@@ -44,14 +71,9 @@ dfSummary(diamondsData)
 
 
 
-
-multiplier <- 1.5
-numericCols <- unlist(lapply(diamondsData, is.numeric)) 
-factorCols <- unlist(lapply(diamondsData, is.factor)) 
-
-# boxplot(diamondsData[, c(numericCols)])
+# boxplot(woodData[, c(numericCols)])
 # 
-# boxplot <- gvisCandlestickChart(diamondsData[, c(numericCols)], 
+# boxplot <- gvisCandlestickChart(woodData[, c(numericCols)], 
 #                                options=list(legend='none'))
 
 # detach(Diamonds2)

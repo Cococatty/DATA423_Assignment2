@@ -7,9 +7,9 @@
 # Define server logic required to draw a histogram
 shinyServer(function(input, output, session) {
     
-    ###########             Explore and EDA Tab              ###########    
+    ###########             About Project              ###########    
     output$edaTextAboutProject <- renderText({
-        paste("https://vincentarelbundock.github.io/Rdatasets/doc/ggplot2/diamonds.html"
+        paste("https://www.teururakau.govt.nz/news-and-resources/open-data-and-forecasting/forestry/new-zealands-forests/"
               , "background info etc"
               , sep = "\n")
     })
@@ -20,15 +20,30 @@ shinyServer(function(input, output, session) {
           , sep = "\n"
           )})
     
-    output$summarySourceDT <- renderPrint(
-        print(dfSummary(diamondsData, graph.magnif = 0.8), 
+    ###########             EDA Source Data              ###########    
+    output$edaSourceSummary <- renderPrint(
+        print(dfSummary(canterburyWood, graph.magnif = 0.8), 
               method = "render",
               headings = TRUE,
               bootstrap.css = FALSE)
         )
     
-    output$edaBoxplot <- renderPlot({
-        standarizedData <- scale(diamondsData[ ,numericCols, drop = FALSE], center = input$edaPlotCenter, scale = input$edaPlotScale)
+    output$edaSourcePlan <- renderText({
+      paste("Few Characters"
+              , "background info etc"
+              , sep = "\n")
+    })
+    
+    ###########             EDA Cleansed Data              ###########    
+    output$edaCleansedSummary <- renderPrint(
+        print(dfSummary(canterburyWoodCleaned, graph.magnif = 0.8), 
+              method = "render",
+              headings = TRUE,
+              bootstrap.css = FALSE)
+        )
+    
+    output$edaSourceBoxplot <- renderPlot({
+        standarizedData <- scale(canterburyWood[ ,numericCols, drop = FALSE], center = input$edaPlotCenter, scale = input$edaPlotScale)
         keyValues <- tidyr::gather(as.data.frame(standarizedData))
         keyValuesDT <- data.table(keyValues)
         
@@ -40,13 +55,28 @@ shinyServer(function(input, output, session) {
     })
   
    
-    output$edaBarchart <- renderPlot({
+    output$edaSourceBarchart <- renderPlot({
         
     })
+    
+    
+        
+    output$edaCleansedBoxplot <- renderPlot({
+        standarizedData <- scale(canterburyWoodCleaned[ ,numericCols, drop = FALSE], center = input$edaPlotCenter, scale = input$edaPlotScale)
+        keyValues <- tidyr::gather(as.data.frame(standarizedData))
+        keyValuesDT <- data.table(keyValues)
+        
+        ggplot(mapping = aes(x = keyValuesDT$key, y = keyValuesDT$value, fill = keyValuesDT$key)) +
+            geom_boxplot(coef = multiplier, outlier.colour = "red") +
+            labs(title = paste("Boxplots at IQR multiplier of", input$edaPlotMultiplier),
+                 x = "Standardised variable value", y = "Std Value") +
+            coord_flip()
+    })
+    
     ###########             Definition Tab              ###########    
     output$defTextCoreQuestion <- renderText({ 
     paste("The second milestone is to setup the CORE question: what do I want to solve in this project?"
-          , "Here, "                                       
+          , "Inspired"                                       
           , sep = "\n"
     )})
     
@@ -57,4 +87,16 @@ shinyServer(function(input, output, session) {
     #           bootstrap.css = FALSE)
     # )
     
+    ###########             Project End              ###########    
+    output$endMoreWork <- renderText({
+        paste("Blah"
+              , "Blah"
+              , sep = "\n")
+    })
+    
+    output$endPotentialExtension <- renderText({
+        paste("Blah"
+              , "Blah"
+              , sep = "\n")
+    })
 })
