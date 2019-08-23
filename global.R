@@ -7,11 +7,12 @@ library(readr, quietly = TRUE)
 library(shiny, quietly = TRUE)
 library(dashboard, quietly = TRUE)
 
-library(Stat2Data)
 library(data.table, quietly = TRUE)
-library(ggplot2, quietly = TRUE)
 library(summarytools, quietly = TRUE)
 library(googleVis, quietly = TRUE)
+
+library(ggplot2, quietly = TRUE)
+# library(Stat2Data)
 
 
 # Read in the data set
