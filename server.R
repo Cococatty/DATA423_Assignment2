@@ -23,7 +23,7 @@ shinyServer(function(input, output, session) {
     
     ###########             EDA Source Data              ###########    
     output$edaSourceSummary <- renderPrint(
-        print(dfSummary(canterburyWood, graph.magnif = 0.8), 
+        print(dfSummary(canterSource, graph.magnif = 0.8), 
               method = "render",
               headings = TRUE,
               bootstrap.css = FALSE)
@@ -35,8 +35,9 @@ shinyServer(function(input, output, session) {
               , sep = "\n")
     })
     
+    #######    ANALYSE NUMERIC VARIABLES OF SOURCE DATA    #######
     output$edaSourceBoxplot <- renderPlot({
-        standarizedData <- scale(canterburyWood[ , numericColsCanta, drop = FALSE]
+        standarizedData <- scale(canterSource[ , canterSourceColsType$numericList, drop = FALSE]
                                  , center = input$edaSourcePlotCenter, scale = input$edaSourcePlotScale)
         keyValues <- tidyr::gather(as.data.frame(standarizedData))
         keyValuesDT <- data.table(keyValues)
@@ -48,24 +49,25 @@ shinyServer(function(input, output, session) {
             coord_flip()
     })
   
-   
-    output$edaSourceBarchart <- renderPlot({
-        
+    #######    ANALYSE FACTOR VARIABLES OF CLEANSED DATA    #######
+    output$edaSourceBarchart <- renderGvis({
+      visPlotList <- plotGVisColChart(canterSource, canterSourceColsType$factorList)
+      return(visPlotList)
     })
     
     
     
     ###########             EDA Cleansed Data              ###########    
     output$edaCleansedSummary <- renderPrint(
-        print(dfSummary(canterburyWoodCleaned, graph.magnif = 0.8), 
+        print(dfSummary(canterCleansed, graph.magnif = 0.8), 
               method = "render",
               headings = TRUE,
               bootstrap.css = FALSE)
         )
     
-        
+    #######    ANALYSE NUMERIC VARIABLES OF CLEANSED DATA    #######
     output$edaCleansedBoxplot <- renderPlot({
-        standarizedData <- scale(canterburyWoodCleaned[ , numericColsCleansed, drop = FALSE]
+        standarizedData <- scale(canterCleansed[ , canterCleansedColsType$numericList, drop = FALSE]
                                  , center = input$edaCleansedPlotCenter, scale = input$edaCleansedPlotScale)
         keyValues <- tidyr::gather(as.data.frame(standarizedData))
         keyValuesDT <- data.table(keyValues)
@@ -77,12 +79,13 @@ shinyServer(function(input, output, session) {
             coord_flip()
     })
 
-    
+    #######    ANALYSE FACTOR VARIABLES OF CLEANSED DATA    #######
     output$edaCleansedBarchart <- renderGvis({
-      visPlotList <- plotGVisColChart(canterburyWoodCleaned, factorColsCleansed)
+      visPlotList <- plotGVisColChart(canterCleansed, canterCleansedColsType$factorList)
       return(visPlotList)
-      # cat(visPlotList$html$chart, file = "GoogleVis/R.html") 
     })
+    
+    
     ###########             Definition Tab              ###########    
     output$defTextCoreQuestion <- renderText({ 
     paste("The second milestone is to setup the CORE question: what do I want to solve in this project?"
