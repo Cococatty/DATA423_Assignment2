@@ -7,7 +7,7 @@
 # Define server logic required to draw a histogram
 shinyServer(function(input, output, session) {
     
-    ###########             About Project              ###########    
+    ################## *******             ABOUT PROJECT *******              ##################
     output$edaTextAboutProject <- renderText({
         paste("Amazon is on fire."
               , "https://www.teururakau.govt.nz/news-and-resources/open-data-and-forecasting/forestry/new-zealands-forests/"
@@ -21,7 +21,8 @@ shinyServer(function(input, output, session) {
           , sep = "\n"
           )})
     
-    ###########             EDA Source Data              ###########    
+    ################## *******             SOURCE DATA *******              ##################
+    #######    EDA of Cleansed Data    #######
     output$edaSourceSummary <- renderPrint(
         print(dfSummary(canterSource, graph.magnif = 0.8), 
               method = "render",
@@ -35,7 +36,7 @@ shinyServer(function(input, output, session) {
               , sep = "\n")
     })
     
-    #######    ANALYSE NUMERIC VARIABLES OF SOURCE DATA    #######
+    #######    Analysis Numeric Variables of Source Data    #######
     output$edaSourceBoxplot <- renderPlot({
         standarizedData <- scale(canterSource[ , canterSourceColsType$numericList, drop = FALSE]
                                  , center = input$edaSourcePlotCenter, scale = input$edaSourcePlotScale)
@@ -49,15 +50,38 @@ shinyServer(function(input, output, session) {
             coord_flip()
     })
   
-    #######    ANALYSE FACTOR VARIABLES OF CLEANSED DATA    #######
+    #######    Analysis Factor Variables of Source Data    #######
     output$edaSourceBarchart <- renderGvis({
-      visPlotList <- plotGVisColChart(canterSource, canterSourceColsType$factorList)
+      visPlotList <- plotGVisColChart(canterSource, canterSourceColsType)
       return(visPlotList)
     })
     
+    #######    Text of Source Data    #######
+    output$edaSourceBoxDesc <- renderText({
+      paste(
+        "Unpruned.thinnings.m3.ha., Thinnings.m3.ha., Pulplog.thinnings.m3.ha. variables have 0 or 1 level of value."
+        , "Without Centering or Scaling data, variables Unpruned.logs.m3.ha., TRV.m3.ha., Pulplogs.m3.ha., Pruned.logs.m3.ha., Age.years. have very different value ranges."
+        , "With Centering and Scaling enabled, these variables are more normally distributed, except for Pruned.logs.m3.ha.."
+        , "Pruned.logs.m3.ha. has a lot of values outside of maximum boundary. We shall have a further check to confirm if they are true outliers."
+        , "At the same time, first quartile and median of Pruned.logs.m3.ha. minimum value are very close"
+        , sep = "\n"
+      )
+    })
+    
+    output$edaSourceBarDesc <- renderText({
+      paste(
+        "Wood.Supply.Region and Thinning variables have only one level of value."
+        , "Therefore, I believe they can be excluded in further analysis."
+        , "Severe level of Class imbalance exsits in all factor variables: Species, Pruning, Planting.coverage, Owner.size."
+        , "Solution"
+        , sep = "\n"
+      )
+    })
     
     
-    ###########             EDA Cleansed Data              ###########    
+    ################## *******             CLEANSED DATA *******              ##################
+    
+    #######    EDA of Cleansed Data    #######
     output$edaCleansedSummary <- renderPrint(
         print(dfSummary(canterCleansed, graph.magnif = 0.8), 
               method = "render",
@@ -65,7 +89,7 @@ shinyServer(function(input, output, session) {
               bootstrap.css = FALSE)
         )
     
-    #######    ANALYSE NUMERIC VARIABLES OF CLEANSED DATA    #######
+    #######    Analysis Numeric Variables of Cleansed Data    #######
     output$edaCleansedBoxplot <- renderPlot({
         standarizedData <- scale(canterCleansed[ , canterCleansedColsType$numericList, drop = FALSE]
                                  , center = input$edaCleansedPlotCenter, scale = input$edaCleansedPlotScale)
@@ -79,28 +103,40 @@ shinyServer(function(input, output, session) {
             coord_flip()
     })
 
-    #######    ANALYSE FACTOR VARIABLES OF CLEANSED DATA    #######
+    #######    Analysis Factor Variables of Cleansed Data    #######
     output$edaCleansedBarchart <- renderGvis({
-      visPlotList <- plotGVisColChart(canterCleansed, canterCleansedColsType$factorList)
+      visPlotList <- plotGVisColChart(canterCleansed, canterCleansedColsType)
       return(visPlotList)
     })
     
     
-    ###########             Definition Tab              ###########    
+    #######    Text of Cleansed Data    #######
+    # output$edaCleansedVisDesc <- renderText({
+    #   paste(
+    #     " "Solution"
+    #     , sep = "\n"
+    #   )
+    # })
+    
+    # output$edaCleansedResult <- renderText({
+    #   paste(
+    #     "Class imbalance"
+    #     , " "
+    #     , sep = "\n"
+    #   )
+    # })
+    
+    
+    
+    ################## *******             DEFINITION *******              ##################
     output$defTextCoreQuestion <- renderText({ 
     paste("The second milestone is to setup the CORE question: what do I want to solve in this project?"
           , "Inspired"                                       
           , sep = "\n"
     )})
     
-    # output$summaryFormattedDT <- renderPrint(
-    #     print(dfSummary(formattedDT, graph.magnif = 0.8), 
-    #           method = "render",
-    #           headings = TRUE,
-    #           bootstrap.css = FALSE)
-    # )
-    
-    ###########             Project End              ###########    
+   
+    ################## *******             PROJECT END *******              ##################
     output$endMoreWork <- renderText({
         paste("Blah"
               , "Blah"

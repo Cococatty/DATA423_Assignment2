@@ -49,8 +49,10 @@ shinyUI(dashboardPage(skin = "yellow"
                          , tabPanel("Source Data Visualization"
                             , h3("Boxplot of source numeric variables")
                             , plotOutput("edaSourceBoxplot")
+                            , textOutput("edaSourceBoxDesc")
                             , h3("Barchart of source factor variables")
                             , htmlOutput("edaSourceBarchart")
+                            , textOutput("edaSourceBarDesc")
                             )
                          ###########             Source Data Plan Tab              ###########
                          , tabPanel("What next?"
@@ -81,10 +83,11 @@ shinyUI(dashboardPage(skin = "yellow"
                          ###########             Cleansed Data Visualization Tab              ###########
                          , tabPanel("Cleansed Data Visualization"
                             , h3("Boxplot of Cleansed numeric variables")
-                            , plotOutput("edaCleansedBoxplot")
+                            # , plotOutput("edaCleansedBoxplot")
                             , h3("Frequency Barchart of Cleansed factor variables")
                             , h4("Hover on the bar to see full details!")
                             , htmlOutput("edaCleansedBarchart")
+                            # , textOutput("edaCleansedVisDesc")
                             )
                         ## Closure - Cleansed Data mainPanel
                         )
