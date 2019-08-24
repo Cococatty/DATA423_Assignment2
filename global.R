@@ -236,7 +236,7 @@ imputeWithMICE <- function() {
   
   matchedCount <- length(which(expectedResult == miceImputeResult))
   miceImputeAccuracy <<- round(matchedCount / NAToSet, 2)
-  imputationAccuracyList[["mice"]] <<- list(resultTable = data.table(expectedResult, miceImputeResult)
+  imputationAccuracyList[["MICE"]] <<- list(resultTable = data.table(expectedResult, miceImputeResult)
                                              , accuracy = miceImputeAccuracy)
 }
 
@@ -266,11 +266,62 @@ imputeWithRecipe <- function() {
   expectedResult <- NAExpectedDT$Pruning
   matchedCount <- length(which(expectedResult == recipePredResult))
   recipeImputeAccuracy <<- round(matchedCount / NAToSet, 2)
-  imputationAccuracyList[["recipe"]] <<- list(resultTable = data.table(expectedResult, recipePredResult)
+  imputationAccuracyList[["Recipe"]] <<- list(resultTable = data.table(expectedResult, recipePredResult)
                                              , accuracy = recipeImputeAccuracy)
 }
 
+############        Impute MASTER CALL
+## Input:   the dataset to be check
+## Output:  a list of:
+#### numeric and factor column names
+#### Frequency tables of all FACTOR variables
+## Use of Output: obtain the returned result
+## TEST SETUP
+test_imputeMaster <- function() {
+  dtToImpute <- canterCleansed
+  imputeTrainRatio <- 0.75
+  varToImpute <- "Pruning"
+  # i <- imputationAccuracyList[[1]]
+  # i <- 1
+  # print(resultDT)
+}
+## FUNCTION BODY
+imputeMaster <- function(dtToImpute, imputeTrainRatio, varToImpute) {
+  # test_imputeMaster()
 
+  ##  Call all required functions to try different imputations
+  splitTrainTestImpute(dtToImpute, imputeTrainRatio, varToImpute)  
+  imputeWithKNN()
+  imputeWithRPart()
+  imputeWithMICE()
+  imputeWithRecipe()
+  
+  ##  Obtain imputations results
+  imputationAccuracyDT <<- data.table(method = names(imputationAccuracyList)
+                                    , accuracy = NA_real_  )
+  
+  masterImputationResultDT <<- data.table(method = character(), expectedResult = character()
+                                    , predictResult = character())
+  
+  ##  Unwrap to get result table and accuracy
+  for ( i in seq(1:length(names(imputationAccuracyList))) ) {
+    currentSet <- imputationAccuracyList[i]
+    methodName <- as.character(names(currentSet))
+    
+    unlistDT <- as.data.table(unlist(currentSet, recursive = FALSE))
+    v <- as.numeric(unique(unlistDT[, 3]))
+    ##  Take out accuracy column
+    resultDT <- unlistDT[, -3]
+    names(resultDT) <- c("expectedResult", "predictResult")
+    resultDT[, method := rep(methodName, nrow(resultDT)) ]
+    ## Form result table to add into master result table
+    resultDT <- setcolorder(resultDT, c("method","expectedResult","predictResult"))
+
+    masterImputationResultDT <<- base::rbind(masterImputationResultDT, resultDT)
+    imputationAccuracyDT[ method == methodName, accuracy := v ]
+  }
+  # masterImputationResultDT
+}
 ################## *******             MODELLING *******              ##################
 
 ############        Model - Train and Test Split
@@ -557,9 +608,8 @@ canterCleansedColsType <<- classifyColTypes(canterCleansed)
 
 imputationAccuracyList <<- list()
 
-
-# colToStudy <<- "Owner.size"
-# names(canterCleansed)
+##  INITIAL IMPUTATION CALL
+imputeMaster(canterCleansed, 0.75, "Pruning")
 
 ####      CALL MAIN FUNCTIONS
 # modelSplitTrainTest(canterCleansed, 0.75)

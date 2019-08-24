@@ -19,6 +19,8 @@ library(missForest)
 data(iris)
 iris2 <- missForest::prodNA(iris, noNA = 0.1)    # cause each column to have about 10% of values missing
 
+colSums(is.na(iris2))
+
 library(caret)
 library(recipes, quietly = TRUE)
 r <- recipe(Species ~., data = iris2) %>%

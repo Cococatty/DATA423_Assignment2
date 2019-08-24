@@ -152,25 +152,28 @@ shinyUI(dashboardPage(skin = "yellow"
                                                  , min = 60, max = 95, value = 75
                                                  , step = 5, post = "%"
                                    )
+                                   , selectizeInput("imputeMethods", "Select to show corresponding imputation result"
+                                                    , choices = c("kNN", "rPart", "MICE", "Recipe"), multiple = TRUE
+                                                    , selected = c("kNN", "rPart", "MICE", "Recipe")
+                                                    )
                                    ## Closure - sidebarPanel
                       )
                       , mainPanel(tabsetPanel(
                           ###########             Imputation Methods and Results Tab              ###########
                           tabPanel("Imputation Methods and Results"
-                                   , h3("blah")
-                                   , tableOutput("imputationResultDT")
+                                   , h3("See below for the imputation result for selected methods")
+                                   , h4("It may take a moment (approximately 20 seconds) to load and update result (when imputation training ratio is changed) - working on it!")
+                                   , dataTableOutput("imputationAccuracyTable")
+                                   , dataTableOutput("imputationResultTable")
                           )
                           ###########             SMOTE Tab              ###########
-                          , tabPanel("blah"
-                                     , h3("blah")
+                          , tabPanel("Imputation Decision"
+                                     # , h3("")
+                                     , plotOutput("imputeResultBarchart")
+                                     , h3("Decision")
+                                     , p("My decision here is to use Recipe to impute missing values in Pruning variable given it has
+                                         high accuarcy across all methods and its flexibility.")
                           )
-                          
-                          
-                          ###########             Tab Template              ###########
-                          # , tabPanel("With"
-                          #          , h3("blah")
-                          # )
-                          ## Closure - Cleansed Data mainPanel
                       )
                       ## Closure - Cleansed Data Tab tabsetPanel
                       )
@@ -277,6 +280,8 @@ shinyUI(dashboardPage(skin = "yellow"
                        , div(
                            p("UI")
                            , p("Table column names")
+                           , p("Efficient and run time of some components. Store objects that are less likely to change
+                               locall?")
             ))
             , tabPanel("Potential Extension"
                      , div(
@@ -304,3 +309,9 @@ shinyUI(dashboardPage(skin = "yellow"
         #         checkboxInput("edaPlotCenter", "Center Data", value = FALSE)         
         #     )
         #     , mainPanel(
+        #        
+###########             Tab Template              ###########
+# , tabPanel("With"
+#          , h3("blah")
+# )
+## Closure - Cleansed Data mainPanel

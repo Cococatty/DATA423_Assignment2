@@ -124,44 +124,51 @@ shinyServer(function(input, output, session) {
       , options = list(scrollX = TRUE, pageLength = 10)
       )
    
+    
     ################## *******             IMPUTATION *******              ##################
-    output$imputationResultDT <- renderDataTable({
-      ##  Call all required functions to try different imputations
-      # splitTrainTestImpute(canterCleansed, input$imputeTrainRatio, "Pruning")
-      splitTrainTestImpute(canterCleansed, 0.75, "Pruning")  
-      imputeWithKNN()
-      imputeWithRPart()
-      imputeWithMICE()
-      imputeWithRecipe()
 
-      imputationAccuracyDT <<- data.table(method = names(imputationAccuracyList)
-                                        , accuracy = NA_real_  )
+    ##    Re-apply imputation learning when ratio is changed
+    observeEvent( input$imputeTrainRatio, {
+      ## The ratio is set to percentage for the ease of user, therefore, it needs to be divided by 100
+      ## before further calculations
+      imputeMaster(canterCleansed, input$imputeTrainRatio/100, "Pruning")
+      output$imputationResultTable <- renderDataTable({
+        masterImputationResultDT[ method %in% input$imputeMethods, ]
+        })
       
-      masterImputationResultDT <<- data.table(method = character(), expectedResult = character()
-                                        , predictResult = character())
-      # attributes(imputationAccuracyList)$names
-      for ( i in seq(1:length(names(imputationAccuracyList))) ) {
-        # i <- imputationAccuracyList[[1]]
-        # i <- 1
-        currentSet <- imputationAccuracyList[i]
-        methodName <- as.character(names(currentSet))
-        
-        unlistDT <- as.data.table(unlist(currentSet, recursive = FALSE))
-        v <- as.numeric(unique(unlistDT[, 3]))
-        
-        resultDT <- unlistDT[, -3]
-        names(resultDT) <- c("expectedResult", "predictResult")
-        resultDT[, method := rep(methodName, nrow(resultDT)) ]
-        # print(resultDT)
-        resultDT <- setcolorder(resultDT, c("method","expectedResult","predictResult"))
-
-        masterImputationResultDT <<- base::rbind(masterImputationResultDT, resultDT)
-        imputationAccuracyDT[ method == methodName, accuracy := v ]
-      }
-     imputationAccuracyDT
+      output$imputationAccuracyTable <- renderDataTable({
+        imputationAccuracyDT[ method %in% input$imputeMethods, ]
+      ## TBD  - to change var to input?
+    })
     })
     
+    output$imputationResultTable <- renderDataTable({
+      masterImputationResultDT[ method %in% input$imputeMethods, ]
+      ## TBD  - to change var to input?
+    })
+    
+    output$imputationAccuracyTable <- renderDataTable({
+      imputationAccuracyDT[ method %in% input$imputeMethods, ]
+      ## TBD  - to change var to input?
+    })
+    
+    output$imputeResultBarchart <- renderPlot({
+      ggplot(imputationAccuracyDT[ method %in% input$imputeMethods, ], aes(method, weight = accuracy)) +
+        geom_bar(fill = "#FF6666") +
+        xlab("Selected Imputation Methods") +
+        ylab("Accuracy in Percentage") +
+        labs(title = "Accuracy visual comparsion between selected methods")
+      # Test code
+      # ggplot(imputationAccuracyDT, aes(method, weight = accuracy)) +
+      #   geom_bar(fill = "#FF6666")
+    })
+
+
     ################## *******             MODELLING *******              ##################
+    ## The ratio is set to percentage for the ease of user, therefore, it needs to be divided by 100
+    ## before further calculations
+    ## input$modelTrainRatio
+
     
     
     ################## *******             CLASSIFICATION *******              ##################
