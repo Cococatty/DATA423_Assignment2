@@ -12,8 +12,8 @@ shinyUI(dashboardPage(skin = "yellow"
     , dashboardSidebar(width = 300, sidebarMenu(
         menuItem("Project Background", tabName = "aboutProject",icon = icon("eye"))
         , menuItem("Explore data", tabName = "eda",icon = icon("studiovinari"))
-        , menuItem("Set up the project", tabName = "definition", icon = icon("users-cog"))
-        , menuItem("Imputation", tabName = "imputation",icon = icon("telegram-plane"))
+        # , menuItem("Set up the project", tabName = "definition", icon = icon("users-cog"))
+        , menuItem("Build models", tabName = "modelling",icon = icon("telegram-plane"))
         , menuItem("Multi-Level Classification", tabName = "classification", icon = icon("tree"))
         , menuItem("Ending Project", tabName = "projectEnd", icon = icon("globe"))
     ))
@@ -80,8 +80,10 @@ shinyUI(dashboardPage(skin = "yellow"
                 ###########             edaSourceBarDesc              ###########
                 , div(p("Wood.Supply.Region and Thinning variables have only one level of value.")
                 ,p("Therefore, I believe they can be excluded in further analysis.")
-                ,p("Severe level of Class imbalance exsits in all factor variables: Species, Pruning, Planting.coverage, Owner.size.")
-                 , p("Class imbalance should be fixed before actual modelling.")
+                ,p("Severe level of Class imbalance exsits in all factor variables: Species, Pruning, Planting.coverage, Owner.size.
+                   This would affect the model to be built in this project. Hence, I will watch out for class imbalance effect and
+                   optimistic prediction accuracy when I am building the models.")
+                # multinominal classification
                 # , textOutput("edaSourceBarDesc")
                 )
                 
@@ -124,22 +126,49 @@ shinyUI(dashboardPage(skin = "yellow"
             ## Closure - EDA Tab
             )
 
-        ################## *******             IMPUTATION *******              ##################
-        , tabItem(tabName = "imputation"
+        ################## *******             MODELLING *******              ##################
+        , tabItem(tabName = "modelling"
                   , sidebarLayout(
                       sidebarPanel(width = 2
-                                   , checkboxInput("fixDataCheck", "Center Data", value = FALSE)
+                                   , sliderInput("modelTrainRatio", "Set the proportion of train data"
+                                                 , min = 60, max = 95, value = 75
+                                                 , step = 5, post = "%"
+                                                 )
                                    ## Closure - sidebarPanel
                       )
                       , mainPanel(tabsetPanel(
-                          ###########             TBC Tab              ###########
-                          tabPanel("Fix Data Summary"
+                          
+                          ###########             Under-sampling Tab              ###########
+                          tabPanel("Purely Under-sampling"
                                    , h3("blah")
                           )
-                          ###########             TBC Tab              ###########
-                          , tabPanel("blah"
+                          ###########             Over-sampling Tab              ###########
+                          , tabPanel("Purely Over-sampling"
+                                   , h3("blah")
+                          )
+                          ###########             Mix-sampling Tab              ###########
+                          , tabPanel("Over-sampling AND Under-sampling"
                                      , h3("blah")
                           )
+                          
+                          ###########             WEIGHTS Tab              ###########
+                          , tabPanel("With Class Weighting"
+                                     , h3("blah")
+                          )
+                          ###########             ROSA Tab              ###########
+                          , tabPanel("Random Over Sampling Examples"
+                                     , h3("blah")
+                          )
+                          ###########             SMOTE Tab              ###########
+                          , tabPanel("Synthetic Minority Over-sampling Technique"
+                                   , h3("blah")
+                          )
+                          
+                          
+                          ###########             Tab Template              ###########
+                          # , tabPanel("With"
+                          #          , h3("blah")
+                          # )
                           ## Closure - Cleansed Data mainPanel
                       )
                       ## Closure - Cleansed Data Tab tabsetPanel
