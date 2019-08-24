@@ -11,144 +11,204 @@ shinyUI(dashboardPage(skin = "yellow"
     , dashboardHeader(title = "Assignment 2 - Yongyan (Carina) Zheng, 85424581)", titleWidth = 500)
     , dashboardSidebar(width = 300, sidebarMenu(
         menuItem("Project Background", tabName = "aboutProject",icon = icon("eye"))
-        , menuItem("Explore source data", tabName = "edaSource",icon = icon("studiovinari"))
-        , menuItem("Explore cleansed data", tabName = "edaCleansed",icon = icon("telegram-plane"))
-        , menuItem("Setting up the project", tabName = "definition", icon = icon("users-cog"))
-        , menuItem("Implement Multi-Level Classification", tabName = "classification", icon = icon("tree"))
+        , menuItem("Explore data", tabName = "eda",icon = icon("studiovinari"))
+        , menuItem("Set up the project", tabName = "definition", icon = icon("users-cog"))
+        , menuItem("Imputation", tabName = "imputation",icon = icon("telegram-plane"))
+        , menuItem("Multi-Level Classification", tabName = "classification", icon = icon("tree"))
         , menuItem("Ending Project", tabName = "projectEnd", icon = icon("globe"))
     ))
     , dashboardBody(fluidRow(tabItems(
-        ###########             aboutProject Tab              ###########
-        tabItem(
-            tabName = "aboutProject"
-            , tabsetPanel(
-                tabPanel("About this project"
-                         , textOutput("edaTextAboutProject")
-                         , img(src = "Amazon-rainforest-fire-1168299.jpg")
-                         )
-                , tabPanel("The first Impression"
-                         , textOutput("edaTextFirstImpression")
-                         )
-                )
+        ################## *******             ABOUT PROJECT *******              ##################
+        tabItem(tabName = "aboutProject", tabsetPanel(
+            tabPanel("About this project"
+                     , textOutput("edaTextAboutProject")
+                     , h1("Amazon is ON FIRE!")
+                     , img(src = "Amazon-rainforest-fire-1168299.jpg")
+                     , div(
+                         p("Amazon has bee on fire for more than 3 weeks now. This is a huge concern to the world because
+                         Amazon is the lungs of the world. \"The Amazon represents over half of the planet\'s remaining 
+                         rainforests and comprises the largest and most biodiverse tract of tropical rainforest in the world, 
+                         with an estimated 390 billion individual trees divided into 16,000 species.\"[1]. This relates
+                           to one of the topics that I am very interested in - environmentally friendly.")
+                         , p("Though this is an assignment, but given its openness, I really wanted to make it a fun 
+                             project as well.")
+                         , p("[1] Amazon rainforest, Wikipedia, retrieved from https://en.wikipedia.org/wiki/Amazon_rainforest on 
+                             18th August 2019")
+                     )
+                     )
+            , tabPanel("Information Gathering"
+                       , div(
+                           p("I did some information search regarding to forest fire in the world, unfortunately, there are
+                             very few datasets meeting both my and the assignment requirements.")
+                           , p("Therefore, I changed my project topic to forestry, which is still relevant to both environmentally friendly.
+                           And then I found an good dataset from Te Rākau Rakau, Forestry New Zealand, regarding to New Zealand's forests [2].")
+                           , p("[2] New Zealand\'s forests, Te Uru Rākau, Forestry New Zealand, retrieved from https://www.teururakau.govt.nz/news-and-resources/open-data-and-forecasting/forestry/new-zealands-forests/ on 
+                             20th August 2019")
+                       )
+                     )
+            )
             ## Closure - aboutProject
             )
-            ###########             Source Data Tab              ###########
-            , tabItem(tabName = "edaSource"
-                      , sidebarLayout(
-                          sidebarPanel(width = 2
-                                        , checkboxInput("edaSourcePlotCenter", "Center Data", value = FALSE)
-                                        , checkboxInput("edaSourcePlotScale", "Scale Data", value = FALSE)
-                                        , sliderInput("edaSourcePlotMultiplier", "Multiplier", min = 1.5, max = 5,value = 1.5)
-                        ## Closure - sidebarPanel
-                        )
-                        , mainPanel(tabsetPanel(
-                         tabPanel("Source Data Summary"
-                                  , htmlOutput("edaSourceSummary")
-                         )
-                         ###########             Source Data Visualization Tab              ###########
-                         , tabPanel("Source Data Visualization"
-                            , h3("Boxplot of source numeric variables")
-                            , plotOutput("edaSourceBoxplot")
-                            , textOutput("edaSourceBoxDesc")
-                            , h3("Barchart of source factor variables")
-                            , htmlOutput("edaSourceBarchart")
-                            , textOutput("edaSourceBarDesc")
-                            )
-                         ###########             Source Data Plan Tab              ###########
-                         , tabPanel("What next?"
-                                    , textOutput("edaSourcePlan")
-                                    )
-                        ## Closure - Source Data mainPanel
-                        )
-                        ## Closure - Source Data Tab tabsetPanel
-                        )
-                      ## Closure - Source Data Tab sidebarLayout
-                        )
-                    ## Closure - Source Data Tab
-                    )
-        
-            ###########             Cleansed Data Tab              ###########
-            , tabItem(tabName = "edaCleansed"
-                      , sidebarLayout(
-                          sidebarPanel(width = 2
-                                        , checkboxInput("edaCleansedPlotCenter", "Center Data", value = FALSE)
-                                        , checkboxInput("edaCleansedPlotScale", "Scale Data", value = FALSE)
-                                        , sliderInput("edaCleansedPlotMultiplier", "Multiplier", min = 1.5, max = 5,value = 1.5)
-                        ## Closure - sidebarPanel
-                        )
-                        , mainPanel(tabsetPanel(
-                         tabPanel("Cleansed Data Summary"
-                                  , htmlOutput("edaCleansedSummary")
-                         )
-                         ###########             Cleansed Data Visualization Tab              ###########
-                         , tabPanel("Cleansed Data Visualization"
-                            , h3("Boxplot of Cleansed numeric variables")
-                            # , plotOutput("edaCleansedBoxplot")
-                            , h3("Frequency Barchart of Cleansed factor variables")
-                            , h4("Hover on the bar to see full details!")
-                            , htmlOutput("edaCleansedBarchart")
-                            # , textOutput("edaCleansedVisDesc")
-                            )
-                        ## Closure - Cleansed Data mainPanel
-                        )
-                       ## Closure - Cleansed Data Tab tabsetPanel
-                        )
-                       ## Closure - Cleansed Data Tab sidebarLayout
-                        )
-                    ## Closure - Cleansed Data Tab
-                    )
-                    
-        
-            ###########             Definition Tab             ###########
-            , tabItem(tabName = "definition"
-                    , tabsetPanel(
-                        tabPanel(tabName = "Define the core question"
-                                 , textOutput("defTextCoreQuestion")
-                                 )
-                        ## Closure - Definition tabsetPanel
-                        )
-            ## Closure - Definition Tab
-                    )
-    
-            ###########             Classification Tab             ###########
-            , tabItem(tabName = "classification"
-                    , sidebarLayout(
-                          sidebarPanel(width = 2
-                                        , checkboxInput("class", "Center Data", value = FALSE)
-                        ## Closure - sidebarPanel
-                        )
-                        , mainPanel(tabsetPanel(
-                            ###########             Cleansed Data Visualization Tab              ###########
-                             tabPanel("Class Data Summary"
-                                      , h2("test")
-                                      # , htmlOutput("edaCleansedSummary")
-                             )
-                        ## Closure - Classification mainPanel
-                        )
-                       ## Closure - Classification Tab tabsetPanel
-                        )
-                       ## Closure - Classification Tab sidebarLayout
-                        )
-                    ## Closure - Classification Tab
-                    )
-       
-            ###########             Project End Tab             ###########
-            , tabItem(tabName = "projectEnd"
-                   , tabsetPanel(
-                        ###########             Project End Tab              ###########
-                         tabPanel("Remaining Work"
-                                  , textOutput("endMoreWork")
-                         )
-                        , tabPanel("Potential Extension"
-                                   , textOutput("endPotentialExtension")
-                                   )
-                       ## Closure - Project End Tab tabsetPanel
-                        )
-                        ## Closure - Project End Tab
-                        )
-            ## ------------------------------------------------------------------------------------------------------------------------------ ##
-                    ## Closure - tabItems
+        ################## *******             EDA *******              ##################
+        , tabItem(tabName = "eda", sidebarLayout(
+            sidebarPanel(width = 2
+                            , checkboxInput("edaPlotCenter", "Center Data", value = FALSE)
+                            , checkboxInput("edaPlotScale", "Scale Data", value = FALSE)
+                            , sliderInput("edaPlotMultiplier", "Multiplier", min = 1.5, max = 5,value = 1.5)
+            ## Closure - sidebarPanel
+            )
+            , mainPanel(
+             tabsetPanel(
+            ###########             Source Data Summary Tab              ###########
+             tabPanel("Source Data Summary"
+                      , htmlOutput("edaSourceSummary")
+             )
+             ###########             Source Data Visualization Tab              ###########
+             , tabPanel("Source Data Visualization"
+                , h3("Boxplot of source numeric variables")
+                , plotOutput("edaSourceBoxplot")
+                ###########             edaSourceBoxDesc              ###########
+                , div("Unpruned.thinnings.m3.ha., Thinnings.m3.ha., Pulplog.thinnings.m3.ha. variables have 0 or 1 level of value.
+                      Without Centering or Scaling data, variables Unpruned.logs.m3.ha., TRV.m3.ha., Pulplogs.m3.ha., Pruned.logs.m3.ha., Age.years. have very different value ranges.
+                      With Centering and Scaling enabled, these variables are more normally distributed, except for Pruned.logs.m3.ha..
+                      Pruned.logs.m3.ha. has a lot of values outside of maximum boundary. We shall have a further check to confirm if they are true outliers.
+                      At the same time, first quartile and median of Pruned.logs.m3.ha. minimum value are very close")
+                # , textOutput("edaSourceBoxDesc")
+                , h3("Barchart of source factor variables")
+                , h4("Hover on the bar to see full details!")
+                , htmlOutput("edaSourceBarchart")
+                ###########             edaSourceBarDesc              ###########
+                , div(p("Wood.Supply.Region and Thinning variables have only one level of value.")
+                ,p("Therefore, I believe they can be excluded in further analysis.")
+                ,p("Severe level of Class imbalance exsits in all factor variables: Species, Pruning, Planting.coverage, Owner.size.")
+                 , p("Class imbalance should be fixed before actual modelling.")
+                # , textOutput("edaSourceBarDesc")
                 )
+                
+                )
+             ###########             Cleansed Data Summary Tab              ###########
+             , tabPanel("Cleansed Data Summary"
+                      , htmlOutput("edaCleansedSummary")
+             )
+             ###########             Cleansed Data Visualization Tab              ###########
+             , tabPanel("Cleansed Data Visualization"
+                        , h3("Boxplot of Cleansed numeric variables")
+                        , plotOutput("edaCleansedBoxplot")
+                        , h3("Frequency Barchart of Cleansed factor variables")
+                        , h4("Hover on the bar to see full details!")
+                        , htmlOutput("edaCleansedBarchart")
+                        , textOutput("edaCleansedBarDesc")
+             ## Closure - Cleansed Data Visualization
+             )
+            ###########             Define Question Tab              ###########
+            , tabPanel("Define the core question"
+                        , div(
+                            p("Now the first milestone - Basic Exploratory Data Analysis, has been reached.
+                              We have obtained basic understanding to this data.")
+                            , p("The second milestone is to setup the CORE question: what do I want to solve via completing this project?
+                                As mentioned in the project background, this project was inspired from the Amazon fire, which relates
+                                to one of the topics taht I am very interested in - environmental friendly.")
+                            , p("Who are blah")
+                        )
+             )
+             ###########             EDA Plan Tab              ###########
+             # , tabPanel("What next?"
+             #            , textOutput("edaPlan")
+             #            )
+            ## Closure - EDA mainPanel
+            )
+            ## Closure - EDA Tab tabsetPanel
+            )
+            ## Closure - EDA Tab sidebarLayout
+            )
+            ## Closure - EDA Tab
+            )
+
+        ################## *******             IMPUTATION *******              ##################
+        , tabItem(tabName = "imputation"
+                  , sidebarLayout(
+                      sidebarPanel(width = 2
+                                   , checkboxInput("fixDataCheck", "Center Data", value = FALSE)
+                                   ## Closure - sidebarPanel
+                      )
+                      , mainPanel(tabsetPanel(
+                          ###########             TBC Tab              ###########
+                          tabPanel("Fix Data Summary"
+                                   , h3("blah")
+                          )
+                          ###########             TBC Tab              ###########
+                          , tabPanel("blah"
+                                     , h3("blah")
+                          )
+                          ## Closure - Cleansed Data mainPanel
+                      )
+                      ## Closure - Cleansed Data Tab tabsetPanel
+                      )
+                      ## Closure - Cleansed Data Tab sidebarLayout
+                  )
+                  ## Closure - Cleansed Data Tab
+        )
+        ################## *******             CLASSIFICATION *******              ##################
+        , tabItem(tabName = "classification"
+                  , sidebarLayout(
+                      sidebarPanel(width = 2
+                                   , checkboxInput("class", "Center Data", value = FALSE)
+                                   ## Closure - sidebarPanel
+                      )
+                      , mainPanel(tabsetPanel(
+                          ###########             Cleansed Data Visualization Tab              ###########
+                          tabPanel("Class Data Summary"
+                                   , h2("test")
+                          )
+                          ## Closure - Classification mainPanel
+                      )
+                      ## Closure - Classification Tab tabsetPanel
+                      )
+                      ## Closure - Classification Tab sidebarLayout
+                  )
+                  ## Closure - Classification Tab
+        )
+        
+        ################## *******             PROJECT END *******              ##################
+        , tabItem(tabName = "projectEnd", tabsetPanel(
+            ###########             Remaining Work Tab              ###########
+            tabPanel("What I have learnt"
+                   , h2("Dynamic number of plots x googleVis Package")
+                   , div(
+                       p("I used googleVis package before but not in a very dynmaic manner. In this project, 
+                         the googleVis plots are generated dynamically!")
+                       , p("This means if the dataset has one extra factor variable, there will be one extra barchart
+                           generated AUTOMATICALLY!")
+                     )
+                   , h2("A more appropriate Data Science project design")
+                   , div(
+                       p("blah")
+                   )
+                   , h2("More flexibilities in Shiny")
+                   , div(
+                       p("Previously, I write report text in server.R, then use the output function in ui.R for display purpose.
+                         However, I found out I can write the text in ui.R with HTML tags! This is great because it has reduced
+                         unreuqired code and efficient has improved, at the same time, it has further extended my HTML skill!")
+                   )
+            )
+            , tabPanel("Remaining Work"
+                       , h2("What can be improved")
+                       , div(
+                           p("UI")
+                           , p("Table column names")
+            ))
+            , tabPanel("Potential Extension"
+                     , div(
+                         p("blah")
+                     )
+            )
+            ## Closure - Project End Tab tabsetPanel
+            )
+                  ## Closure - Project End Tab
+        )
+            ## ------------------------------------------------------------------------------------------------------------------------------ ##
+             ## Closure - tabItems
+             )
             )
             ## Closure - fluidRow
             )
@@ -156,15 +216,10 @@ shinyUI(dashboardPage(skin = "yellow"
             )
             ## Closure - shinyUI and dashboardPage
         )
-# )
-        
-        
+
         # , sidebarLayout(
         #     sidebarPanel(
         #         # input$edaPlotCenter, scale = input$edaPlotScale
-        #         checkboxInput("edaPlotCenter", "Center Data", value = FALSE)
-        #         , checkboxInput("edaPlotScale", "Scale Data", value = FALSE)
-        #         , sliderInput("edaPlotMultiplier", "Multiplier"
-        #                       , min = 1.5, max = 5, value = 1.5)
+        #         checkboxInput("edaPlotCenter", "Center Data", value = FALSE)         
         #     )
         #     , mainPanel(

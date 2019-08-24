@@ -8,21 +8,22 @@
 shinyServer(function(input, output, session) {
     
     ################## *******             ABOUT PROJECT *******              ##################
-    output$edaTextAboutProject <- renderText({
-        paste("Amazon is on fire."
-              , "https://www.teururakau.govt.nz/news-and-resources/open-data-and-forecasting/forestry/new-zealands-forests/"
-              , "background info etc"
-              , sep = "\n")
-    })
-    output$edaTextFirstImpression <- renderText({
-    paste("Though this is an assignment, but because of its openness, I really wanted to make it 
-          a fun project instead."
-          , "Test this"
-          , sep = "\n"
-          )})
-    
+    # output$edaTextAboutProject <- renderPrint({
+    #     paste("Amazon is on fire."
+    #           , "https://www.teururakau.govt.nz/news-and-resources/open-data-and-forecasting/forestry/new-zealands-forests/"
+    #           , "background info etc"
+    #           , sep = "\n")
+    # })
+  
+    # output$edaTextFirstImpression <- renderPrint({
+    # paste("Though this is an assignment, but because of its openness, I really wanted to make it 
+    #       a fun project instead."
+    #       , "Test this"
+    #       , sep = "\n"
+    #       )})
+    # 
     ################## *******             SOURCE DATA *******              ##################
-    #######    EDA of Cleansed Data    #######
+    #######    EDA of Source Data    #######
     output$edaSourceSummary <- renderPrint(
         print(dfSummary(canterSource, graph.magnif = 0.8), 
               method = "render",
@@ -30,7 +31,7 @@ shinyServer(function(input, output, session) {
               bootstrap.css = FALSE)
         )
     
-    output$edaSourcePlan <- renderText({
+    output$edaSourcePlan <- renderPrint({
       paste("Few Characters"
               , "background info etc"
               , sep = "\n")
@@ -39,13 +40,13 @@ shinyServer(function(input, output, session) {
     #######    Analysis Numeric Variables of Source Data    #######
     output$edaSourceBoxplot <- renderPlot({
         standarizedData <- scale(canterSource[ , canterSourceColsType$numericList, drop = FALSE]
-                                 , center = input$edaSourcePlotCenter, scale = input$edaSourcePlotScale)
+                                 , center = input$edaPlotCenter, scale = input$edaPlotScale)
         keyValues <- tidyr::gather(as.data.frame(standarizedData))
         keyValuesDT <- data.table(keyValues)
         
         ggplot(mapping = aes(x = keyValuesDT$key, y = keyValuesDT$value, fill = keyValuesDT$key)) +
             geom_boxplot(coef = input$edaSourcePlotMultiplier, outlier.colour = "red") +
-            labs(title = paste("Boxplots at IQR multiplier of", input$edaSourcePlotMultiplier),
+            labs(title = paste("Boxplots at IQR multiplier of", input$edaPlotMultiplier),
                  x = "Standardised variable value", y = "Std Value") +
             coord_flip()
     })
@@ -57,8 +58,8 @@ shinyServer(function(input, output, session) {
     })
     
     #######    Text of Source Data    #######
-    output$edaSourceBoxDesc <- renderText({
-      paste(
+    output$edaSourceBoxDesc <- renderPrint({
+      cat(
         "Unpruned.thinnings.m3.ha., Thinnings.m3.ha., Pulplog.thinnings.m3.ha. variables have 0 or 1 level of value."
         , "Without Centering or Scaling data, variables Unpruned.logs.m3.ha., TRV.m3.ha., Pulplogs.m3.ha., Pruned.logs.m3.ha., Age.years. have very different value ranges."
         , "With Centering and Scaling enabled, these variables are more normally distributed, except for Pruned.logs.m3.ha.."
@@ -68,12 +69,12 @@ shinyServer(function(input, output, session) {
       )
     })
     
-    output$edaSourceBarDesc <- renderText({
-      paste(
+    output$edaSourceBarDesc <- renderPrint({
+      cat(
         "Wood.Supply.Region and Thinning variables have only one level of value."
         , "Therefore, I believe they can be excluded in further analysis."
         , "Severe level of Class imbalance exsits in all factor variables: Species, Pruning, Planting.coverage, Owner.size."
-        , "Solution"
+        , "Class imbalance should be fixed before actual modelling."
         , sep = "\n"
       )
     })
@@ -92,13 +93,13 @@ shinyServer(function(input, output, session) {
     #######    Analysis Numeric Variables of Cleansed Data    #######
     output$edaCleansedBoxplot <- renderPlot({
         standarizedData <- scale(canterCleansed[ , canterCleansedColsType$numericList, drop = FALSE]
-                                 , center = input$edaCleansedPlotCenter, scale = input$edaCleansedPlotScale)
+                                 , center = input$edaPlotCenter, scale = input$edaPlotScale)
         keyValues <- tidyr::gather(as.data.frame(standarizedData))
         keyValuesDT <- data.table(keyValues)
         
         ggplot(mapping = aes(x = keyValuesDT$key, y = keyValuesDT$value, fill = keyValuesDT$key)) +
             geom_boxplot(coef = input$edaCleansedPlotMultiplier, outlier.colour = "red") +
-            labs(title = paste("Boxplots at IQR multiplier of", input$edaCleansedPlotMultiplier),
+            labs(title = paste("Boxplots at IQR multiplier of", input$edaPlotMultiplier),
                  x = "Standardised variable value", y = "Std Value") +
             coord_flip()
     })
@@ -111,41 +112,45 @@ shinyServer(function(input, output, session) {
     
     
     #######    Text of Cleansed Data    #######
-    # output$edaCleansedVisDesc <- renderText({
-    #   paste(
-    #     " "Solution"
-    #     , sep = "\n"
-    #   )
-    # })
+    output$edaCleansedBoxDesc <- renderPrint({
+      paste(
+        "Solution"
+        , sep = "\n"
+      )
+    })
     
-    # output$edaCleansedResult <- renderText({
-    #   paste(
-    #     "Class imbalance"
-    #     , " "
-    #     , sep = "\n"
-    #   )
-    # })
-    
+    output$edaCleansedBarDesc <- renderPrint({
+      paste(
+        "Class imbalance"
+        , sep = "\n"
+      )
+    })
+
+    output$edaCleansedResult <- renderPrint({
+      paste(
+        "blah"
+        , "blah"
+        , sep = "\n"
+      )
+    })
+
     
     
     ################## *******             DEFINITION *******              ##################
-    output$defTextCoreQuestion <- renderText({ 
-    paste("The second milestone is to setup the CORE question: what do I want to solve in this project?"
-          , "Inspired"                                       
-          , sep = "\n"
-    )})
-    
-   
+    # output$defTextCoreQuestion <- renderPrint({ 
+    # paste("The second milestone is to setup the CORE question: what do I want to solve in this project?"
+    #       , "Inspired"                                       
+    #       , sep = "\n"
+    # )})
+    # 
+    # 
     ################## *******             PROJECT END *******              ##################
-    output$endMoreWork <- renderText({
-        paste("Blah"
-              , "Blah"
-              , sep = "\n")
-    })
     
-    output$endPotentialExtension <- renderText({
-        paste("Blah"
-              , "Blah"
-              , sep = "\n")
-    })
+
 })
+
+    # output$endPotentialExtension <- renderPrint({
+    #     paste("Blah"
+    #           , "Blah"
+    #           , sep = "\n")
+    # })

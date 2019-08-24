@@ -61,20 +61,31 @@ canterCleansedColsType <- classifyColTypes(canterCleansed)
 
 
 dev <- function() {
+  
+  standarizedData <- scale(canterSource[ , canterSourceColsType$numericList, drop = FALSE]
+                           , center = TRUE, scale = TRUE)
+  keyValues <- tidyr::gather(as.data.frame(standarizedData))
+  keyValuesDT <- data.table(keyValues)
+  
+  Candle <- gvisCandlestickChart(keyValuesDT, 
+                               options=list(legend='none'))
+plot(Candle)
+
+testDT <- data.table(a= seq(1:2), low = c(100,200), Max =  )
+  OpenClose
+  
+  ggplot(mapping = aes(x = keyValuesDT$key, y = keyValuesDT$value, fill = keyValuesDT$key)) +
+      geom_boxplot(coef = input$edaSourcePlotMultiplier, outlier.colour = "red") +
+      labs(title = paste("Boxplots at IQR multiplier of", input$edaPlotMultiplier),
+           x = "Standardised variable value", y = "Std Value") +
+      coord_flip()
+  
   View(canterCleansed)
   summary(canterCleansed)
   summarytools::dfSummary(canterCleansed, style = "multiline")
   ?gvisColumnChart
   
-  freq <- iris
-  
-  n <- names(canterCleansed)
-  n <- n[sapply(n, function(var) is.factor(canterCleansed[[var]]))]
-  
-  for(var in factorColsCleansed){
-    cnt <- dplyr::count(canterCleansed, get(var))
-    print(cnt)
-  }
+ 
 
 }
 
