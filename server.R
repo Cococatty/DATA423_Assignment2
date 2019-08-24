@@ -57,6 +57,11 @@ shinyServer(function(input, output, session) {
       return(visPlotList)
     })
     
+    #######    Missing Data of Source Data    #######
+    output$edaSourceMissingData <- renderPlot({visdat::vis_dat(canterSource)})
+    
+    output$edaSourceMissDataPattern <- renderPlot({ naniar::gg_miss_upset(canterSource) })
+    
     #######    Text of Source Data    #######
     output$edaSourceBoxDesc <- renderPrint({
       cat(
@@ -111,29 +116,50 @@ shinyServer(function(input, output, session) {
     })
     
     
-    #######    Text of Cleansed Data    #######
-    output$edaCleansedBoxDesc <- renderPrint({
-      paste(
-        "Solution"
-        , sep = "\n"
-      )
-    })
+    #######    Missing Data of Cleansed Data    #######
+    output$edaCleansedMissingData <- renderPlot({visdat::vis_dat(canterCleansed)})
     
-    output$edaCleansedBarDesc <- renderPrint({
-      paste(
-        "Class imbalance"
-        , sep = "\n"
+    output$edaCleansedMissDT <- renderDataTable(
+      canterCleansed[!complete.cases(canterCleansed), ]
+      , options = list(scrollX = TRUE, pageLength = 10)
       )
-    })
+   
+    ################## *******             IMPUTATION *******              ##################
+    output$imputationResultDT <- renderDataTable({
+      ##  Call all required functions to try different imputations
+      # splitTrainTestImpute(canterCleansed, input$imputeTrainRatio, "Pruning")
+      splitTrainTestImpute(canterCleansed, 0.75, "Pruning")  
+      imputeWithKNN()
+      imputeWithRPart()
+      imputeWithMICE()
+      imputeWithRecipe()
 
-    output$edaCleansedResult <- renderPrint({
-      paste(
-        "blah"
-        , "blah"
-        , sep = "\n"
-      )
-    })
+      imputationAccuracyDT <<- data.table(method = names(imputationAccuracyList)
+                                        , accuracy = NA_real_  )
+      
+      masterImputationResultDT <<- data.table(method = character(), expectedResult = character()
+                                        , predictResult = character())
+      # attributes(imputationAccuracyList)$names
+      for ( i in seq(1:length(names(imputationAccuracyList))) ) {
+        # i <- imputationAccuracyList[[1]]
+        # i <- 1
+        currentSet <- imputationAccuracyList[i]
+        methodName <- as.character(names(currentSet))
+        
+        unlistDT <- as.data.table(unlist(currentSet, recursive = FALSE))
+        v <- as.numeric(unique(unlistDT[, 3]))
+        
+        resultDT <- unlistDT[, -3]
+        names(resultDT) <- c("expectedResult", "predictResult")
+        resultDT[, method := rep(methodName, nrow(resultDT)) ]
+        # print(resultDT)
+        resultDT <- setcolorder(resultDT, c("method","expectedResult","predictResult"))
 
+        masterImputationResultDT <<- base::rbind(masterImputationResultDT, resultDT)
+        imputationAccuracyDT[ method == methodName, accuracy := v ]
+      }
+     imputationAccuracyDT
+    })
     
     ################## *******             MODELLING *******              ##################
     

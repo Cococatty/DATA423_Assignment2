@@ -9,10 +9,11 @@ library(shinydashboard)
 # Define UI for application that draws a histogram
 shinyUI(dashboardPage(skin = "yellow"
     , dashboardHeader(title = "Assignment 2 - Yongyan (Carina) Zheng, 85424581)", titleWidth = 500)
+    ################## *******             MENU *******              ##################
     , dashboardSidebar(width = 300, sidebarMenu(
         menuItem("Project Background", tabName = "aboutProject",icon = icon("eye"))
         , menuItem("Explore data", tabName = "eda",icon = icon("studiovinari"))
-        # , menuItem("Set up the project", tabName = "definition", icon = icon("users-cog"))
+        , menuItem("Imputation", tabName = "imputation", icon = icon("puzzle-piece"))
         , menuItem("Build models", tabName = "modelling",icon = icon("telegram-plane"))
         , menuItem("Multi-Level Classification", tabName = "classification", icon = icon("tree"))
         , menuItem("Ending Project", tabName = "projectEnd", icon = icon("globe"))
@@ -62,6 +63,12 @@ shinyUI(dashboardPage(skin = "yellow"
             ###########             Source Data Summary Tab              ###########
              tabPanel("Source Data Summary"
                       , htmlOutput("edaSourceSummary")
+                      , div(
+                          p("As summary shows, there exists missing data in pruning variable. Given this 
+                            factor variable already has two levels of value and the number of missing 
+                            data is 50, I will set the NA to be the 
+                            third level - \"Not Available\"  ")
+                      )
              )
              ###########             Source Data Visualization Tab              ###########
              , tabPanel("Source Data Visualization"
@@ -86,8 +93,12 @@ shinyUI(dashboardPage(skin = "yellow"
                 # multinominal classification
                 # , textOutput("edaSourceBarDesc")
                 )
-                
                 )
+            ###########             Source Missing Data Tab              ###########
+            , tabPanel("Missing Data Plot"
+                       , plotOutput("edaSourceMissingData")
+                       , plotOutput("edaSourceMissDataPattern")
+                       )
              ###########             Cleansed Data Summary Tab              ###########
              , tabPanel("Cleansed Data Summary"
                       , htmlOutput("edaCleansedSummary")
@@ -100,8 +111,15 @@ shinyUI(dashboardPage(skin = "yellow"
                         , h4("Hover on the bar to see full details!")
                         , htmlOutput("edaCleansedBarchart")
                         , textOutput("edaCleansedBarDesc")
-             ## Closure - Cleansed Data Visualization
              )
+            ###########             Cleansed Missing Data Tab              ###########
+            , tabPanel("Missing Data Check"
+                       , plotOutput("edaCleansedMissingData")
+                       , dataTableOutput("edaCleansedMissDT")
+                       , div(
+                           p("As the plot above shown, there exists missing data in pruning variable.")
+                       )
+            )
             ###########             Define Question Tab              ###########
             , tabPanel("Define the core question"
                         , div(
@@ -126,6 +144,40 @@ shinyUI(dashboardPage(skin = "yellow"
             ## Closure - EDA Tab
             )
 
+        ################## *******             IMPUTATION *******              ##################
+        , tabItem(tabName = "imputation"
+                  , sidebarLayout(
+                      sidebarPanel(width = 2
+                                   , sliderInput("imputeTrainRatio", "Set the proportion of train data in Imputation"
+                                                 , min = 60, max = 95, value = 75
+                                                 , step = 5, post = "%"
+                                   )
+                                   ## Closure - sidebarPanel
+                      )
+                      , mainPanel(tabsetPanel(
+                          ###########             Imputation Methods and Results Tab              ###########
+                          tabPanel("Imputation Methods and Results"
+                                   , h3("blah")
+                                   , tableOutput("imputationResultDT")
+                          )
+                          ###########             SMOTE Tab              ###########
+                          , tabPanel("blah"
+                                     , h3("blah")
+                          )
+                          
+                          
+                          ###########             Tab Template              ###########
+                          # , tabPanel("With"
+                          #          , h3("blah")
+                          # )
+                          ## Closure - Cleansed Data mainPanel
+                      )
+                      ## Closure - Cleansed Data Tab tabsetPanel
+                      )
+                      ## Closure - Cleansed Data Tab sidebarLayout
+                  )
+                  ## Closure - Cleansed Data Tab
+        )
         ################## *******             MODELLING *******              ##################
         , tabItem(tabName = "modelling"
                   , sidebarLayout(
@@ -160,7 +212,7 @@ shinyUI(dashboardPage(skin = "yellow"
                                      , h3("blah")
                           )
                           ###########             SMOTE Tab              ###########
-                          , tabPanel("Synthetic Minority Over-sampling Technique"
+                          , tabPanel("Synthetic Minority Over-sampling Technique (SMOTE)"
                                    , h3("blah")
                           )
                           

@@ -1,20 +1,33 @@
 #  Loading required library
 #  , quietly = TRUE
 # install.packages("caret")
+# install.packages("ROSE")
+# install.packages("RANN")
 
-library(readr)
-library(shiny)
-library(dashboard)
+library(readr, quietly = TRUE)
+library(shiny, quietly = TRUE)
+library(dashboard, quietly = TRUE)
 
-library(data.table)
-library(summarytools)
-library(dplyr)
-library(googleVis)
-library(ggplot2)
-library(recipes)
-library(caret)
+library(data.table, quietly = TRUE)
+library(summarytools, quietly = TRUE)
+library(dplyr, quietly = TRUE)
+library(googleVis, quietly = TRUE)
+library(ggplot2, quietly = TRUE)
+library(DMwR, quietly = TRUE)
+library(rpart, quietly = TRUE)
+library(RANN, quietly = TRUE)
+library(randomForest, quietly = TRUE)
+library(naniar, quietly = TRUE)
+library(recipes, quietly = TRUE)
+library(caret, quietly = TRUE)
+library(mice, quietly = TRUE)
+library(ROSE, quietly = TRUE)
+##############------------ TEST
+library(visdat, quietly = TRUE)
+library(carData, quietly = TRUE)
 
-########################          ASSISTING FUNCTIONS          ########################
+
+################## *******             ASSISTING FUNCTIONS *******              ##################
 
 ############        Find Columns Data Types of Specified Dataset
 ## Input:   the dataset to be check
@@ -46,52 +59,6 @@ classifyColTypes <- function(dtToClassify) {
   resultList <- list(numericList = numericCols, factorList = factorCols, freqTblList = freqTblList)
   return(resultList)
 }
-
-
-########################          BASIC DATA MANIPULATION          ########################
-# Read in the data set
-allWoodData <- read.delim("2015-yield-tables-Canterbury.tsv", header = TRUE, sep = "\t")
-## Fix column names
-names(allWoodData) <- gsub("\\.\\.", ".", names(allWoodData))
-##  Get Canterbury Data
-canterSource <- subset(allWoodData, Wood.Supply.Region == "Canterbury") 
-canterSource <- droplevels.data.frame(canterSource)
-canterSourceColsType <- classifyColTypes(canterSource)
-
-# DROP COLUMNS THAT HAVE ONLY ONE LEVEL
-canterCleansed <<- canterSource[, sapply(canterSource, function(col) length(unique(col))) > 1]
-canterCleansedColsType <- classifyColTypes(canterCleansed)
-
-
-dev <- function() {
-  
-  standarizedData <- scale(canterSource[ , canterSourceColsType$numericList, drop = FALSE]
-                           , center = TRUE, scale = TRUE)
-  keyValues <- tidyr::gather(as.data.frame(standarizedData))
-  keyValuesDT <- data.table(keyValues)
-  
-  Candle <- gvisCandlestickChart(keyValuesDT, 
-                               options=list(legend='none'))
-plot(Candle)
-
-testDT <- data.table(a= seq(1:2), low = c(100,200), Max =  )
-  OpenClose
-  
-  ggplot(mapping = aes(x = keyValuesDT$key, y = keyValuesDT$value, fill = keyValuesDT$key)) +
-      geom_boxplot(coef = input$edaSourcePlotMultiplier, outlier.colour = "red") +
-      labs(title = paste("Boxplots at IQR multiplier of", input$edaPlotMultiplier),
-           x = "Standardised variable value", y = "Std Value") +
-      coord_flip()
-  
-  View(canterCleansed)
-  summary(canterCleansed)
-  summarytools::dfSummary(canterCleansed, style = "multiline")
-  ?gvisColumnChart
-  
- 
-
-}
-
 
 ########      PLOT GOOGLE VIS COLUMN CHART (BARCHART)
 ## TEST SETUP
@@ -128,48 +95,269 @@ plotGVisColChart <- function(dataToPlot, colInfoList) {
   return(visPlotList)
 }
 
-########################          MODELLING AND RELEVANT          ########################
+################## *******             IMPUTATION *******              ##################
 
-############        Train and Test Split
+############        Imputation Train and Test Split
 ## Input:   the dataset to be split
 ## Output:  train dataset and test dataset
 ## Use of Output: train and test models
 ## TEST SETUP
-test_splitTrainTest <- function() {
-  trainRatio <<- 0.75
-  dtToImpute <<- canterCleansed
+test_splitTrainTestImpute <- function() {
+  trainRatio <- 0.75
+  dtToImpute <- canterCleansed
+  colInfo <- canterCleansedColsType
+  varToImpute <- "Pruning"
 }
 ## FUNCTION BODY
-splitTrainTest <- function(dtToImpute, trainRatio = 0.75) {
-  # test_splitTrainTest()
+splitTrainTestImpute <- function(dtToImpute, trainRatio = 0.75, varToImpute) {
+  # test_splitTrainTestImpute()
   
-  ## Calculate sample size
-  sampleLength <- floor(nrow(dtToImpute) * trainRatio)
-  
-  ## Set the seed to make partition reproducible
-  # set.seed(5)
-  
-  ## split data by trainRatio
-  trainIndexSet <- sample(seq_len(nrow(dtToImpute)), size = sampleLegth)
-  trainDT <<- dtToImpute[trainIndexSet, ]
-  testDT <<- dtToImpute[-trainIndexSet, ]
-  # nrow(testDT)/nrow(trainDT)
+  ##    Imputation
+  ##    If any NA exist in dataset to be used for modelling, this means imputation is required
+  if (anyNA(dtToImpute)) {
+    # print("NA Exists!")
+    nonNADT <<- na.omit(dtToImpute)
+    allNADT <<- dtToImpute[ rowSums(is.na(dtToImpute))!=0, ]
+    NAToSet <<- nrow(nonNADT) * (1-trainRatio)
+    set.seed(50)
+    NAIndex <<- sample(1:nrow(nonNADT), NAToSet)
+    
+    # 45 rows
+    NAExpectedDT_t <- nonNADT[ NAIndex, ]
+    NAExpectedDT <<- NAExpectedDT_t
+    
+    NATestDT_t <- NAExpectedDT
+    NATestDT_t[, varToImpute] <- NA
+    # 45 rows
+    NATestDT_Small <<- NATestDT_t
+    
+    # 180 rows, with some NAs
+    NATestDT_t <- nonNADT
+    NATestDT_t[NAIndex, varToImpute] <- NA
+    NATestDT <<- NATestDT_t
+    
+    # View(NATestDT)
+    # dim(NATestDT_Small)
+    # dim(NATrainDT)
+    # dim(NATestDT)
+    # dim(nonNADT)
+  }
 }
 
-############        Impute Data
+
+############        Impute Missing Data with kNN
 ## Input:   the dataset to be check
 ## Output:  a list of:
 #### numeric and factor column names
 #### Frequency tables of all FACTOR variables
 ## Use of Output: obtain the returned result
 ## TEST SETUP
-test_Recipe <- function() {
-  trainRatio <<- 0.75
-  dtToImpute <<- canterCleansed
+test_imputeWithKNN <- function() {
+  sourceDTToImpute <- canterCleansed
+  trainRatio <- 0.75
+  varToImpute <- "Pruning"
+  splitTrainTestImpute(sourceDTToImpute, trainRatio, varToImpute)
 }
 ## FUNCTION BODY
-modelWithRecipe <- function(dtToImpute, trainRatio = 0.75) {
-  test_Recipe()
+imputeWithKNN <- function() {
+  # test_imputeWithKNN()
+  
+  ##  Impute by kNN
+  knnImputeResult <- knnImputation(NATestDT)
+  # anyNA(knnImputeResult)
+  
+  expectedResult <- NAExpectedDT$Pruning
+  knnPredResult <- knnImputeResult[ NAIndex, "Pruning"]
+  
+  matchedCount <- length(which(expectedResult == knnPredResult))
+  knnImputeAccuracy <<- round(matchedCount / NAToSet, 2)
+  imputationAccuracyList[["kNN"]] <<- list(resultTable = data.table(expectedResult, knnPredResult)
+                                             , accuracy = knnImputeAccuracy)
+}
+
+
+############        Impute Missing Data with rPart
+## Input:   the dataset to be check
+## Output:  a list of:
+#### numeric and factor column names
+#### Frequency tables of all FACTOR variables
+## Use of Output: obtain the returned result
+## TEST SETUP
+test_imputeWithRPart <- function() {
+  sourceDTToImpute <- canterCleansed
+  trainRatio <- 0.75
+  varToImpute <- "Pruning"
+  splitTrainTestImpute(sourceDTToImpute, trainRatio, varToImpute)
+}
+## FUNCTION BODY
+imputeWithRPart <- function() {
+  # test_imputeWithRPart()
+  
+  ##  Build model by dataset without NAs
+  rPartImputeForm <- rpart(Pruning ~ ., data = nonNADT, method = "class")
+  
+  rPartPredResult <- predict(rPartImputeForm, NATestDT_Small )
+  expectedResult <- NAExpectedDT$Pruning
+  rPartPredCompare <- colnames(rPartPredResult)[apply(rPartPredResult, 1, which.max)]
+  
+  matchedCount <- length(which(expectedResult == rPartPredCompare))
+  rPartImputeAccuracy <<- round(matchedCount / NAToSet, 2)
+  imputationAccuracyList[["rPart"]] <<- list( resultTable = data.table(expectedResult, rPartPredCompare)
+                                             , accuracy = rPartImputeAccuracy)
+  
+}
+
+############        Impute Missing Data with Multivariate Imputation by Chained Equations
+## Input:   the dataset to be check
+## Output:  a list of:
+#### numeric and factor column names
+#### Frequency tables of all FACTOR variables
+## Use of Output: obtain the returned result
+## TEST SETUP
+test_imputeWithMICE <- function() {
+  sourceDTToImpute <- canterCleansed
+  trainRatio <- 0.75
+  varToImpute <- "Pruning"
+  splitTrainTestImpute(sourceDTToImpute, trainRatio, varToImpute)
+}
+## FUNCTION BODY
+imputeWithMICE <- function() {
+  # test_imputeWithMICE()
+  
+  ##  Impute with Random Forest
+  # dim(NATestDT)
+  miceImputeForm <- mice(NATestDT, method = "rf")
+  miceImputePrediction <- mice::complete(miceImputeForm)
+  # anyNA(miceImputeResult)
+  
+  ##  Now Test!
+  miceImputeResult <- miceImputePrediction[NAIndex, "Pruning"]
+  expectedResult <- NAExpectedDT$Pruning
+  
+  matchedCount <- length(which(expectedResult == miceImputeResult))
+  miceImputeAccuracy <<- round(matchedCount / NAToSet, 2)
+  imputationAccuracyList[["mice"]] <<- list(resultTable = data.table(expectedResult, miceImputeResult)
+                                             , accuracy = miceImputeAccuracy)
+}
+
+############        Impute Missing Data with Recipe
+## Input:   the dataset to be check
+## Output:  a list of:
+#### numeric and factor column names
+#### Frequency tables of all FACTOR variables
+## Use of Output: obtain the returned result
+## TEST SETUP
+test_imputeWithRecipe <- function() {
+  sourceDTToImpute <- canterCleansed
+  trainRatio <- 0.75
+  varToImpute <- "Pruning"
+  splitTrainTestImpute(sourceDTToImpute, trainRatio, varToImpute)
+}
+## FUNCTION BODY
+imputeWithRecipe <- function() {
+  # test_imputeWithRecipe()
+  recipeImputeForm <- recipe(Pruning ~ . , data = NATestDT) %>% 
+    step_naomit(all_outcomes(), skip = TRUE) %>%
+    step_knnimpute(all_predictors())  
+  
+  recipeImputeTrained <- caret::train(recipeImputeForm, data = NATestDT, method = "rf")
+  recipePredResult <- predict(recipeImputeTrained, newdata = NATestDT_Small)
+  
+  expectedResult <- NAExpectedDT$Pruning
+  matchedCount <- length(which(expectedResult == recipePredResult))
+  recipeImputeAccuracy <<- round(matchedCount / NAToSet, 2)
+  imputationAccuracyList[["recipe"]] <<- list(resultTable = data.table(expectedResult, recipePredResult)
+                                             , accuracy = recipeImputeAccuracy)
+}
+
+
+################## *******             MODELLING *******              ##################
+
+############        Model - Train and Test Split
+## Input:   the dataset to be split
+## Output:  train dataset and test dataset
+## Use of Output: train and test models
+## TEST SETUP
+test_splitTrainTestModel <- function() {
+  trainRatio <<- 0.75
+  dtToModel <<- canterCleansed
+  colInfo <<- canterCleansedColsType
+}
+## FUNCTION BODY
+splitTrainTestModel <- function(dtToModel, trainRatio = 0.75) {
+  # test_splitTrainTestModel()
+  
+  modelRowsLength <<- nrow(dtToModel)
+  maxNumToMatch <<- max(table(dtToModel[ "Owner.size" ]))
+  ## Calculate sample size
+  trainLength <<- floor(nrow(dtToModel) * trainRatio)
+
+  ## split data by trainRatio
+  trainIndexSet <<- sample(seq_len(nrow(dtToModel)), size = trainLength)
+  trainDT <<- dtToModel[trainIndexSet, ]
+  testDT <<- dtToModel[-trainIndexSet, ]
+}
+
+############        Model with Purely Under-sampling
+## Input:   the dataset to be check
+## Output:  a list of:
+#### numeric and factor column names
+#### Frequency tables of all FACTOR variables
+## Use of Output: obtain the returned result
+## TEST SETUP
+test_modelWithUnderSample <- function() {
+  trainRatio <<- 0.75
+  dtToModel <<- canterCleansed
+  modelSplitTrainTest(dtToModel, trainRatio)
+}
+## FUNCTION BODY
+modelWithUnderSample <- function() {
+  test_modelWithUnderSample()
+
+  underSampledTrainDT <- ovun.sample(Owner.size ~ ., data = trainDT, method = "under", N = maxNumToMatch)$data
+  table(underSampledTrainDT$Owner.size)
+}
+  
+
+
+############        Model with Purely Over-sampling
+## Input:   the dataset to be check
+## Output:  a list of:
+#### numeric and factor column names
+#### Frequency tables of all FACTOR variables
+## Use of Output: obtain the returned result
+## TEST SETUP
+test_modelWithOverSample <- function() {
+  trainRatio <<- 0.75
+  dtToModel <<- canterCleansed
+}
+## FUNCTION BODY
+modelWithOverSample <- function(dtToModel, trainRatio = 0.75) {
+  test_modelWithOverSample()
+
+  data_balanced_over <- ovun.sample(Owner.size ~ ., data = trainDT
+                                    , method = "over", N = modelRowsLength)$data
+  table(data_balanced_over$Owner.size)
+
+  roc.curve(hacide.test$cls, pred.treeimb[,2], plotit = F)
+}
+  
+  
+  
+############        Model with Recipe (Over and Under Samplings)
+## Input:   the dataset to be check
+## Output:  a list of:
+#### numeric and factor column names
+#### Frequency tables of all FACTOR variables
+## Use of Output: obtain the returned result
+## TEST SETUP
+test_modelWithRecipe <- function() {
+  trainRatio <<- 0.75
+  dtToModel <<- canterCleansed
+}
+## FUNCTION BODY
+modelWithRecipe <- function(dtToModel, trainRatio = 0.75) {
+  test_modelWithRecipe()
 
   # canterCleansedColsType$freqTblList$Owner.size
   modelRecipe <- recipe(Owner.size ~ ., data = trainDT) %>%
@@ -178,17 +366,14 @@ modelWithRecipe <- function(dtToImpute, trainRatio = 0.75) {
     prep(data = trainDT)
   
   trainData_Recipe <- bake(modelRecipe, trainDT)
-  classifyColTypes(trainData_Recipe)
+  balDataRecipe <<- classifyColTypes(trainData_Recipe)
   
-  names(trainData)
-  table(trainData$Owner.size)
-  table(trainData$Pruning)
-  table(trainData$Pruning)
-  
-  caret::train(cls ~ ., data = trainData, method = "rpart2", metric = "Accuracy",
-             trControl = trainControl(method = "boot", number = 20))
-  
-  
+  modelRecipe <- caret::train(OwnerSize ~ ., data = trainDT, method = "rpart2", metric = "Accuracy"
+                              , trControl = trainControl(method = "boot", number = 20))
+?caret::train
+View(trainDT)
+  names(trainDT)[4] <- "OwnerSize"
+  levels(trainDT$OwnerSize)
   set.seed(99)
   rec <- recipe(cls ~ ., data = hacide.train) %>%
     step_downsample(all_outcomes(), ratio = 10, skip = TRUE) %>%
@@ -208,10 +393,10 @@ modelWithRecipe <- function(dtToImpute, trainRatio = 0.75) {
 ## TEST SETUP
 test_modelWithWeights <- function() {
   trainRatio <<- 0.75
-  dtToImpute <<- canterCleansed
+  dtToModel <<- canterCleansed
 }
 ## FUNCTION BODY
-modelWithWeights <- function(dtToImpute, trainRatio = 0.75) {
+modelWithWeights <- function(dtToModel, trainRatio = 0.75) {
   test_modelWithWeights()
   
   tab <- table(hacide.train$cls)
@@ -235,23 +420,18 @@ modelWithWeights <- function(dtToImpute, trainRatio = 0.75) {
 ## Use of Output: obtain the returned result
 ## TEST SETUP
 test_modelWithROSE <- function() {
-  trainRatio <<- 0.75
-  dtToImpute <<- canterCleansed
+  
 }
 ## FUNCTION BODY
-modelWithROSE <- function(dtToImpute, trainRatio = 0.75) {
+modelWithROSE <- function(dtToModel, trainRatio = 0.75) {
   test_modelWithWeights()
   
-  library(rpart)
-  treeimb <- rpart(cls ~ ., data = hacide.train)
-  pred.treeimb <- predict(treeimb, newdata = hacide.test)
+  roseTree <- rpart(Owner.size ~ ., data = trainDT)
+  predROSE <- predict(roseTree, newdata = testDT)
   
-  library(ROSE)  # Random Over Sampling Examples
-  ROSE::accuracy.meas(hacide.test$cls, pred.treeimb[,2])
-  roc.curve(hacide.test$cls, pred.treeimb[,2], plotit = F)
+  # ROSE::accuracy.meas(hacide.test$cls, pred.treeimb[,2])
+  # roc.curve(hacide.test$cls, pred.treeimb[,2], plotit = F)
   
-  data_balanced_over <- ovun.sample(cls ~ ., data = hacide.train, method = "over",N = 1960)$data
-  table(data_balanced_over$cls)
 }
 
 ############        Model with Synthetic Minority Over-sampling Technique
@@ -263,10 +443,10 @@ modelWithROSE <- function(dtToImpute, trainRatio = 0.75) {
 ## TEST SETUP
 test_modelWithSMOTE <- function() {
   trainRatio <<- 0.75
-  dtToImpute <<- canterCleansed
+  dtToModel <<- canterCleansed
 }
 ## FUNCTION BODY
-modelWithSMOTE <- function(dtToImpute, trainRatio = 0.75) {
+modelWithSMOTE <- function(dtToModel, trainRatio = 0.75) {
   test_modelWithWeights()
   
   ctrl <- trainControl(method = "repeatedcv", 
@@ -296,10 +476,10 @@ modelWithSMOTE <- function(dtToImpute, trainRatio = 0.75) {
 ## TEST SETUP
 test_predictModels <- function() {
   trainRatio <<- 0.75
-  dtToImpute <<- canterCleansed
+  dtToModel <<- canterCleansed
 }
 ## FUNCTION BODY
-predictModels <- function(dtToImpute, trainRatio = 0.75) {
+predictModels <- function(dtToModel, trainRatio = 0.75) {
   test_predictModels()
   
   models <- list(original = model_rf,
@@ -346,23 +526,139 @@ predictModels <- function(dtToImpute, trainRatio = 0.75) {
 #### Frequency tables of all FACTOR variables
 ## Use of Output: obtain the returned result
 ## TEST SETUP
-test_accuracyTest <- function() {
+test_accuracyTestMode <- function() {
   trainRatio <<- 0.75
-  dtToImpute <<- canterCleansed
+  dtToModel <<- canterCleansed
 }
 ## FUNCTION BODY
-accuracyTest <- function(dtToImpute, trainRatio = 0.75) {
-  test_predictModels()
-  roc.curve(hacide.test$cls, pred.treeimb[,2], plotit = F)
+accuracyTestModel <- function() {
+  test_accuracyTestMode()
+  ROSE::accuracy.meas(testDT$cls, predROSE[,2])
+                      
+  roc.curve(testDT$Owner.size, predROSE[,2], plotit = F)
 }
+
+  
+  
+################## *******             BASIC DATA MANIPULATION *******              ##################
+
+# Read in the data set
+allWoodData <- read.delim("2015-yield-tables-Canterbury.tsv", header = TRUE, sep = "\t")
+## Fix column names
+names(allWoodData) <- gsub("\\.\\.", ".", names(allWoodData))
+##  Get Canterbury Data
+canterSource <- subset(allWoodData, Wood.Supply.Region == "Canterbury") 
+canterSource <- droplevels.data.frame(canterSource)
+canterSourceColsType <<- classifyColTypes(canterSource)
+
+# DROP COLUMNS THAT HAVE ONLY ONE LEVEL
+canterCleansed <<- canterSource[, sapply(canterSource, function(col) length(unique(col))) > 1]
+canterCleansedColsType <<- classifyColTypes(canterCleansed)
+
+imputationAccuracyList <<- list()
+
+
+# colToStudy <<- "Owner.size"
+# names(canterCleansed)
+
+####      CALL MAIN FUNCTIONS
+# modelSplitTrainTest(canterCleansed, 0.75)
+
+
+dev <- function() {
+  
+######    Current scope - Imputation
+pp <- caret::preProcess(x = canterCleansed, method = "knnImpute")
+t <- predict(pp, canterCleansed)
+View(t)
+dim(t)
+View(canterCleansed)
+
+colSums(is.na(canterCleansed))
+??colsum
+?predict
+install.packages("mice")
+library(mice)
+imputed_Data <- mice::mice(canterCleansed, m = 5, maxit = 50, method = 'pmm', print = FALSE)
+summary(imputed_Data$m)
+View(imputed_Data)
+names(canterCleansed)
+
+modset <- with(data = imputed_Data, exp = lm(Pruning ~ .)) 
+summary(modset)
+
 
   View(canterCleansed)
   names(canterCleansed)
+ 
+  summary(canterCleansed)
+  summarytools::dfSummary(canterCleansed, style = "multiline")
+  ?gvisColumnChart
   
+  data(MplsStops)
+    d <- MplsStops
+    limit <- 1000
+    if (nrow(d) > limit) {
+      d <- d[sample(1:nrow(d), limit),]
+    }
+    d <- d[order(d$idNum, decreasing = FALSE),]
+    View(d)
+    visdat::vis_dat(d)
+
+  install.packages("Amelia")    
+  library(Amelia)
+  amelia_sets <- Amelia::amelia(iris2, m = 5, noms = "Species")
+  summary(amelia_sets)
+  nrow(amelia_sets)
+  dim(iris2)
+  amelia_sets$imputations[[2]]
   
+  t1 <- Amelia::amelia(trainDT, m = 5, noms = "Pruning")
+  
+  tt <- mice(trainDT)
+  tt$imp$Pruning
+  View(tt)
+  t2 <- complete(tt)
+  View(t2)
+  which(is.na(t2$Pruning))
+  ?which
+  imp <- mice(nhanes)
+imp
+
+library(caret, quietly = TRUE)
+pp <- caret::preProcess(x = trainDT, method = "knnImpute")
+pT <- predict(pp, trainDT)
+View(pT)
+is.na(pT$Pruning)
+# }
+# 
+test5Result <- train(Sepal.Length ~ . , data = iris_miss_5, method = "lm",
+           preProc = "knnImpute", na.action = na.pass)
+
+# NOT RUN {
+install.packages("mlr")
+library(mlr)
+df = data.frame(x = c(1, 1, NA), y = factor(c("a", "a", "b")), z = 1:3)
+imputed = impute(df, target = character(0), cols = list(x = 99, y = imputeMode()))
+print(imputed$data)
+reimpute(data.frame(x = NA_real_), imputed$desc)
 
 
+test5Result <- caret::train(Pruning ~ . , data = trainDT, method = "RFlda", 
+           preProc = "bagImpute", na.action = na.pass)
+head(test5Result)#ends in error
 
+library(rpart)
+install.packages("mlbench")
+data ("BostonHousing", package="mlbench")
+class_mod <- rpart(rad ~ . - medv, data=BostonHousing[!is.na(BostonHousing$rad), ], method="class", na.action=na.omit)  # since rad is a factor
+anova_mod <- rpart(ptratio ~ . - medv, data=BostonHousing[!is.na(BostonHousing$ptratio), ], method="anova", na.action=na.omit)  # since ptratio is numeric.
+rad_pred <- predict(class_mod, BostonHousing[is.na(BostonHousing$rad), ])
+ptratio_pred <- predict(anova_mod, BostonHousing[is.na(BostonHousing$ptratio), ])
+
+# }
+# 
+}
 
 
 
