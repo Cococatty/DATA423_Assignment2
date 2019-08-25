@@ -158,9 +158,6 @@ shinyServer(function(input, output, session) {
         xlab("Selected Imputation Methods") +
         ylab("Accuracy in Percentage") +
         labs(title = "Accuracy visual comparsion between selected methods")
-      # Test code
-      # ggplot(imputationAccuracyDT, aes(method, weight = accuracy)) +
-      #   geom_bar(fill = "#FF6666")
     })
 
 
@@ -168,6 +165,44 @@ shinyServer(function(input, output, session) {
     ## The ratio is set to percentage for the ease of user, therefore, it needs to be divided by 100
     ## before further calculations
     ## input$modelTrainRatio
+    ## Re-apply modelling learning when ratio is changed
+    observeEvent( input$modelTrainRatio, {
+      ## The ratio is set to percentage for the ease of user, therefore, it needs to be divided by 100
+      ## before further calculations
+      modelMaster(input$modelTrainRatio/100)
+      output$masterModelResultDT <- renderDataTable({
+        masterModelResultDT[ method %in% input$modelMethods, ]
+        })
+
+      output$modelAccuracyTable <- renderDataTable({
+        modelAccuracyDT[ method %in% input$modelMethods, ]
+      ## TBD  - to change var to input?
+      })
+    })
+
+    output$masterModelResultDT <- renderDataTable({
+      masterModelResultDT[ method %in% input$modelMethods, ]
+      ## TBD  - to change var to input?
+    })
+
+    output$modelAccuracyTable <- renderDataTable({
+      modelAccuracyDT[ method %in% input$modelMethods, ]
+      ## TBD  - to change var to input?
+    })
+
+  #   output$modelConfMatRecipe <- renderPrint({modelResultConfMatRecipe})
+
+  # modelResultConfMatROSE
+  # modelResultConfMatWeighted
+
+
+    output$modelResultBarchart <- renderPlot({
+      ggplot(modelAccuracyDT[ method %in% input$modelMethods, ], aes(method, weight = accuracy)) +
+        geom_bar(fill = "#FF6666") +
+        xlab("Selected Modelling Methods") +
+        ylab("Accuracy in Percentage") +
+        labs(title = "Accuracy visual comparsion between selected methods")
+    })
 
     
     

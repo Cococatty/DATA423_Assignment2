@@ -15,7 +15,7 @@ shinyUI(dashboardPage(skin = "yellow"
         , menuItem("Explore data", tabName = "eda",icon = icon("studiovinari"))
         , menuItem("Imputation", tabName = "imputation", icon = icon("puzzle-piece"))
         , menuItem("Build models", tabName = "modelling",icon = icon("telegram-plane"))
-        , menuItem("Multi-Level Classification", tabName = "classification", icon = icon("tree"))
+        # , menuItem("Multi-Level Classification", tabName = "classification", icon = icon("tree"))
         , menuItem("Ending Project", tabName = "projectEnd", icon = icon("globe"))
     ))
     , dashboardBody(fluidRow(tabItems(
@@ -166,7 +166,7 @@ shinyUI(dashboardPage(skin = "yellow"
                                    , dataTableOutput("imputationAccuracyTable")
                                    , dataTableOutput("imputationResultTable")
                           )
-                          ###########             SMOTE Tab              ###########
+                          ###########             Imputation Decision Tab              ###########
                           , tabPanel("Imputation Decision"
                                      # , h3("")
                                      , plotOutput("imputeResultBarchart")
@@ -192,45 +192,32 @@ shinyUI(dashboardPage(skin = "yellow"
                                    ## Closure - sidebarPanel
                       )
                       , mainPanel(tabsetPanel(
-                          
-                          ###########             Under-sampling Tab              ###########
-                          tabPanel("Purely Under-sampling"
-                                   , h3("blah")
+                          ###########             Modelling Methods and Results Tab              ###########
+                          tabPanel("Modelling Methods and Results"
+                                   ,p("Methods tested are: Class Weighting (Weighted), Random Over 
+                                      Sampling Examples (ROSE), Synthetic Minority Over-sampling Technique (SMOTE), ")
+                                   , h3("See below for the modelling result for selected methods")
+                                   , h4("It may take a moment (approximately 20 seconds) to load and update result 
+                                        (when modelling training ratio is changed) - working on it!")
+                                   # , dataTableOutput("modelAccuracyTable")
+                                   # , dataTableOutput("masterModelResultDT")
+                                   # , verbatimTextOutput("modelConfMatRecipe")
                           )
-                          ###########             Over-sampling Tab              ###########
-                          , tabPanel("Purely Over-sampling"
-                                   , h3("blah")
+                          ###########             Modelling Decision Tab              ###########
+                          , tabPanel("Model Decision"
+                                     # , h3("")
+                                     # , plotOutput("modelResultBarchart")
+                                     , h3("Decision")
+                                     , p("My decision here is to use Recipe to impute missing values in Pruning variable given it has
+                                         high accuarcy across all methods and its flexibility.")
                           )
-                          ###########             Mix-sampling Tab              ###########
-                          , tabPanel("Over-sampling AND Under-sampling"
-                                     , h3("blah")
-                          )
-                          
-                          ###########             WEIGHTS Tab              ###########
-                          , tabPanel("With Class Weighting"
-                                     , h3("blah")
-                          )
-                          ###########             ROSA Tab              ###########
-                          , tabPanel("Random Over Sampling Examples"
-                                     , h3("blah")
-                          )
-                          ###########             SMOTE Tab              ###########
-                          , tabPanel("Synthetic Minority Over-sampling Technique (SMOTE)"
-                                   , h3("blah")
-                          )
-                          
-                          
-                          ###########             Tab Template              ###########
-                          # , tabPanel("With"
-                          #          , h3("blah")
-                          # )
-                          ## Closure - Cleansed Data mainPanel
+                      ## Closure - Modelling Tab tabsetPanel
                       )
-                      ## Closure - Cleansed Data Tab tabsetPanel
+                      ## Closure - Modelling Tab mainPanel
                       )
-                      ## Closure - Cleansed Data Tab sidebarLayout
+                      ## Closure - Modelling Tab sidebarLayout
                   )
-                  ## Closure - Cleansed Data Tab
+                  ## Closure - Modelling Tab
         )
         ################## *******             CLASSIFICATION *******              ##################
         , tabItem(tabName = "classification"
@@ -257,18 +244,24 @@ shinyUI(dashboardPage(skin = "yellow"
         , tabItem(tabName = "projectEnd", tabsetPanel(
             ###########             Remaining Work Tab              ###########
             tabPanel("What I have learnt"
-                   , h2("Dynamic number of plots x googleVis Package")
+                   , h2("Statistics")
+                   , h3("Different imputation methods IN PRACTICE")
+                   , p("I learnt a lot about imputation methods and their implementation via this project!")
+                   , h3("Various modelling methods IN PRACTICE")
+                   , p("I learnt a lot about imputation methods and their implementation via this project!")
+                   , h3("A more appropriate Data Science project design")
+                   , div(
+                       p("blah")
+                   )
+                   , h2("Shiny")
+                   , h3("Dynamic number of plots x googleVis Package")
                    , div(
                        p("I used googleVis package before but not in a very dynmaic manner. In this project, 
                          the googleVis plots are generated dynamically!")
                        , p("This means if the dataset has one extra factor variable, there will be one extra barchart
                            generated AUTOMATICALLY!")
-                     )
-                   , h2("A more appropriate Data Science project design")
-                   , div(
-                       p("blah")
                    )
-                   , h2("More flexibilities in Shiny")
+                   , h3("More flexibilities in Shiny")
                    , div(
                        p("Previously, I write report text in server.R, then use the output function in ui.R for display purpose.
                          However, I found out I can write the text in ui.R with HTML tags! This is great because it has reduced
@@ -285,7 +278,7 @@ shinyUI(dashboardPage(skin = "yellow"
             ))
             , tabPanel("Potential Extension"
                      , div(
-                         p("blah")
+                         p("Working with companies within these categories to improve sustainability in New Zealand.")
                      )
             )
             ## Closure - Project End Tab tabsetPanel

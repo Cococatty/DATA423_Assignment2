@@ -170,7 +170,7 @@ imputeWithKNN <- function() {
   knnPredResult <- knnImputeResult[ NAIndex, "Pruning"]
   
   matchedCount <- length(which(expectedResult == knnPredResult))
-  knnImputeAccuracy <<- round(matchedCount / NAToSet, 2)
+  knnImputeAccuracy <- round(matchedCount / NAToSet, 2)
   imputationAccuracyList[["kNN"]] <<- list(resultTable = data.table(expectedResult, knnPredResult)
                                              , accuracy = knnImputeAccuracy)
 }
@@ -201,7 +201,7 @@ imputeWithRPart <- function() {
   rPartPredCompare <- colnames(rPartPredResult)[apply(rPartPredResult, 1, which.max)]
   
   matchedCount <- length(which(expectedResult == rPartPredCompare))
-  rPartImputeAccuracy <<- round(matchedCount / NAToSet, 2)
+  rPartImputeAccuracy <- round(matchedCount / NAToSet, 2)
   imputationAccuracyList[["rPart"]] <<- list( resultTable = data.table(expectedResult, rPartPredCompare)
                                              , accuracy = rPartImputeAccuracy)
   
@@ -235,7 +235,7 @@ imputeWithMICE <- function() {
   expectedResult <- NAExpectedDT$Pruning
   
   matchedCount <- length(which(expectedResult == miceImputeResult))
-  miceImputeAccuracy <<- round(matchedCount / NAToSet, 2)
+  miceImputeAccuracy <- round(matchedCount / NAToSet, 2)
   imputationAccuracyList[["MICE"]] <<- list(resultTable = data.table(expectedResult, miceImputeResult)
                                              , accuracy = miceImputeAccuracy)
 }
@@ -265,7 +265,7 @@ imputeWithRecipe <- function() {
   
   expectedResult <- NAExpectedDT$Pruning
   matchedCount <- length(which(expectedResult == recipePredResult))
-  recipeImputeAccuracy <<- round(matchedCount / NAToSet, 2)
+  recipeImputeAccuracy <- round(matchedCount / NAToSet, 2)
   imputationAccuracyList[["Recipe"]] <<- list(resultTable = data.table(expectedResult, recipePredResult)
                                              , accuracy = recipeImputeAccuracy)
 }
@@ -330,23 +330,36 @@ imputeMaster <- function(dtToImpute, imputeTrainRatio, varToImpute) {
 ## Use of Output: train and test models
 ## TEST SETUP
 test_splitTrainTestModel <- function() {
-  trainRatio <<- 0.75
-  dtToModel <<- canterCleansed
-  colInfo <<- canterCleansedColsType
+  modelTrainRatio <- 0.75
+  dtToModel <- canterCleansed
+  colInfo <- canterCleansedColsType
 }
 ## FUNCTION BODY
-splitTrainTestModel <- function(dtToModel, trainRatio = 0.75) {
+splitTrainTestModel <- function(dtToModel, modelTrainRatio = 0.75) {
   # test_splitTrainTestModel()
   
   modelRowsLength <<- nrow(dtToModel)
   maxNumToMatch <<- max(table(dtToModel[ "Owner.size" ]))
   ## Calculate sample size
-  trainLength <<- floor(nrow(dtToModel) * trainRatio)
+  trainLength <<- floor(nrow(dtToModel) * modelTrainRatio)
 
-  ## split data by trainRatio
+  ## split data by modelTrainRatio
+  set.seed(100)
   trainIndexSet <<- sample(seq_len(nrow(dtToModel)), size = trainLength)
-  trainDT <<- dtToModel[trainIndexSet, ]
-  testDT <<- dtToModel[-trainIndexSet, ]
+  modelTrainDT <<- dtToModel[trainIndexSet, ]
+  modelTrainNAsDT_t <- modelTrainDT
+  # modelTrainNAsDT_t <-
+  # modelTrainNAsDT <<- 
+  # nrow(modelTestDT)
+  # anyNA(modelTrainDT)
+  modelTestDT <<- dtToModel[-trainIndexSet, ]
+  modelTestNAIndex <<- sample(seq_len(nrow(modelTestDT)), size = nrow(modelTestDT) * (1-modelTrainRatio))
+  modelNALength <<- length(modelTestNAIndex)
+  modelTestNAsDT_t <- modelTestDT[modelTestNAIndex, ]
+  modelTestNAsExpectedDT <<- modelTestDT[modelTestNAIndex, ]
+  modelTestNAsDT_t$Owner.size <- NA
+  modelTestNAsDT <<- modelTestNAsDT_t
+  # View(modelTestDT)
 }
 
 ############        Model with Purely Under-sampling
@@ -357,15 +370,21 @@ splitTrainTestModel <- function(dtToModel, trainRatio = 0.75) {
 ## Use of Output: obtain the returned result
 ## TEST SETUP
 test_modelWithUnderSample <- function() {
-  trainRatio <<- 0.75
-  dtToModel <<- canterCleansed
-  modelSplitTrainTest(dtToModel, trainRatio)
+  modelTrainRatio <- 0.75
+  dtToModel <- canterCleansed
+  splitTrainTestModel(dtToModel, modelTrainRatio)
 }
 ## FUNCTION BODY
 modelWithUnderSample <- function() {
-  test_modelWithUnderSample()
-
-  underSampledTrainDT <- ovun.sample(Owner.size ~ ., data = trainDT, method = "under", N = maxNumToMatch)$data
+  # test_modelWithUnderSample()
+  
+  modelTrainDT$Owner.size
+  View(modelTrainDT)
+  anyNA(modelTrainDT)
+  is.factor(modelTrainDT$Pruning)
+  levels(modelTrainDT$Owner.size)
+  underSampledTrainDT <- ovun.sample(Owner.size ~ ., data = modelTrainDT, method = "under"
+                                     , N = maxNumToMatch)$data
   table(underSampledTrainDT$Owner.size)
 }
   
@@ -403,36 +422,31 @@ modelWithOverSample <- function(dtToModel, trainRatio = 0.75) {
 ## Use of Output: obtain the returned result
 ## TEST SETUP
 test_modelWithRecipe <- function() {
-  trainRatio <<- 0.75
-  dtToModel <<- canterCleansed
+  modelTrainRatio <- 0.75
+  dtToModel <- canterCleansed
 }
 ## FUNCTION BODY
-modelWithRecipe <- function(dtToModel, trainRatio = 0.75) {
-  test_modelWithRecipe()
+modelWithRecipe <- function() {
+  # test_modelWithRecipe()
 
   # canterCleansedColsType$freqTblList$Owner.size
-  modelRecipe <- recipe(Owner.size ~ ., data = trainDT) %>%
+
+  recipeBalance <- recipe(Owner.size ~ ., data = modelTrainDT) %>%
     step_downsample(all_outcomes(), ratio = 10, skip = FALSE) %>%
     step_upsample(all_outcomes(), ratio = 1, skip = FALSE) %>%
-    prep(data = trainDT)
+    prep(data = modelTrainDT)
   
-  trainData_Recipe <- bake(modelRecipe, trainDT)
-  balDataRecipe <<- classifyColTypes(trainData_Recipe)
-  
-  modelRecipe <- caret::train(OwnerSize ~ ., data = trainDT, method = "rpart2", metric = "Accuracy"
-                              , trControl = trainControl(method = "boot", number = 20))
-?caret::train
-View(trainDT)
-  names(trainDT)[4] <- "OwnerSize"
-  levels(trainDT$OwnerSize)
-  set.seed(99)
-  rec <- recipe(cls ~ ., data = hacide.train) %>%
-    step_downsample(all_outcomes(), ratio = 10, skip = TRUE) %>%
-    step_upsample(all_outcomes(), ratio = 1, skip = TRUE)
-  caret::train(rec, data = hacide.train, method = "rpart2", metric = "Accuracy",
-               trControl = trainControl(method = "boot", number = 20))
+  balancedData <- bake(recipeBalance, modelTrainDT)
+  # table(balancedData$Owner.size)
 
-  roc.curve(hacide.test$cls, pred.treeimb[,2], plotit = F)
+  recipeFormula <- caret::train(Owner.size ~ ., data = balancedData, method = "rpart2", metric = "Accuracy",
+             trControl = trainControl(method = "boot", number = 20))
+
+  predictionResult <- predict(recipeFormula, modelTestNAsDT)
+
+  ##  Accuracy feedback
+  simpleAccuracyTestModel("Recipe", predictionResult)
+  modelResultConfMatRecipe <<- confMatAccuracyTestModel(predictionResult)
 }
 
 ############        Model with Weighted Data
@@ -443,24 +457,28 @@ View(trainDT)
 ## Use of Output: obtain the returned result
 ## TEST SETUP
 test_modelWithWeights <- function() {
-  trainRatio <<- 0.75
-  dtToModel <<- canterCleansed
+  modelTrainRatio <- 0.75
+  dtToModel <- canterCleansed
 }
 ## FUNCTION BODY
-modelWithWeights <- function(dtToModel, trainRatio = 0.75) {
-  test_modelWithWeights()
+modelWithWeights <- function() {
+  # test_modelWithWeights()
+  tab <- table(modelTrainDT$Owner.size)
+  weightToGet <- rep(1, times = nrow(modelTrainDT))
   
-  tab <- table(hacide.train$cls)
-  w <- rep(1, times = nrow(hacide.train))
   for (level in names(tab)) {
-    w[hacide.train$cls == level] <- sum(tab) / tab[[level]]
+    weightToGet[modelTrainDT$Owner.size == level] <- sum(tab) / tab[[level]]
   }
-  w
   
-  caret::train(cls ~ ., data = hacide.train, method = "rpart2", metric = "Accuracy",
-             trControl = trainControl(method = "boot", number = 20),
-             weights = w)
-  roc.curve(hacide.test$cls, pred.treeimb[,2], plotit = F)
+  weightFormular <- caret::train(Owner.size ~ ., data = modelTrainDT, method = "rpart2", metric = "Accuracy"
+                                 , trControl = trainControl(method = "boot", number = 20)
+                                 , weights = weightToGet)
+  
+  predictionResult <- predict(weightFormular, modelTestNAsDT)
+  
+  ##  Accuracy feedback
+  simpleAccuracyTestModel("Weighted", predictionResult)
+  modelResultConfMatWeighted <<- confMatAccuracyTestModel(predictionResult)
 }
 
 ############        Model with Random Over Sampling Examples
@@ -471,19 +489,24 @@ modelWithWeights <- function(dtToModel, trainRatio = 0.75) {
 ## Use of Output: obtain the returned result
 ## TEST SETUP
 test_modelWithROSE <- function() {
-  
+  modelTrainRatio <- 0.75
+  dtToModel <- canterCleansed
+  splitTrainTestModel(dtToModel, modelTrainRatio)
+  i <- 1
 }
 ## FUNCTION BODY
-modelWithROSE <- function(dtToModel, trainRatio = 0.75) {
-  test_modelWithWeights()
+modelWithROSE <- function() {
+  # test_modelWithWeights()
   
-  roseTree <- rpart(Owner.size ~ ., data = trainDT)
-  predROSE <- predict(roseTree, newdata = testDT)
+  roseFormula <- rpart(Owner.size ~ ., data = modelTrainDT)
+  predictionResult <- predict(roseFormula, newdata = modelTestNAsDT, type = "class")
   
-  # ROSE::accuracy.meas(hacide.test$cls, pred.treeimb[,2])
-  # roc.curve(hacide.test$cls, pred.treeimb[,2], plotit = F)
-  
+  ##  Accuracy feedback
+  simpleAccuracyTestModel("ROSE", predictionResult)
+  modelResultConfMatROSE <<- confMatAccuracyTestModel(predictionResult)
+  # modelAccuracyList is global
 }
+
 
 ############        Model with Synthetic Minority Over-sampling Technique
 ## Input:   the dataset to be check
@@ -493,29 +516,34 @@ modelWithROSE <- function(dtToModel, trainRatio = 0.75) {
 ## Use of Output: obtain the returned result
 ## TEST SETUP
 test_modelWithSMOTE <- function() {
-  trainRatio <<- 0.75
-  dtToModel <<- canterCleansed
+  modelTrainRatio <- 0.75
+  dtToModel <- canterCleansed
+  splitTrainTestModel(dtToModel, modelTrainRatio)
+  i <- 1
 }
 ## FUNCTION BODY
-modelWithSMOTE <- function(dtToModel, trainRatio = 0.75) {
-  test_modelWithWeights()
+modelWithSMOTE <- function() {
+  # test_modelWithSMOTE()
   
-  ctrl <- trainControl(method = "repeatedcv", 
-                     number = 10, 
-                     repeats = 10, 
-                     verboseIter = FALSE,
-                     sampling = "smote")
+  smoteCtrl <- trainControl(method = "repeatedcv", number = 10, repeats = 10
+                       , verboseIter = FALSE, sampling = "smote")
   
-  set.seed(42)
-  model_rf_smote <- caret::train(classes ~ .,
-                                data = train_data,
+  set.seed(100)
+  smoteFormula <- caret::train(Owner.size ~ .,
+                                data = modelTrainDT,
                                 method = "rf",
                                 preProcess = c("scale", "center"),
-                                trControl = ctrl)
-  final_smote <- data.frame(actual = test_data$classes,
-                           predict(model_rf_smote, newdata = test_data, type = "prob"))
-  final_smote$predict <- ifelse(final_smote$benign > 0.5, "benign", "malignant")
-  cm_smote <- confusionMatrix(final_smote$predict, test_data$classes)
+                                trControl = smoteCtrl)
+  # Large-scale forests
+  predictionResult <- predict(smoteFormula, newdata = modelTestNAsDT, type = "prob")
+  expectedResult <- modelTestNAsExpectedDT$Owner.size
+  resultMatrixSMOTE <<- data.table(actual = expectedResult, predictionResult)
+  
+  predictValues <- colnames(resultMatrixSMOTE)[apply(resultMatrixSMOTE, 1, which.max)]
+  
+  ##  Accuracy feedback
+  simpleAccuracyTestModel("SMOTE", predictValues)
+  # modelAccuracyList$SMOTE
 }
 
 ############        Model with Synthetic Minority Over-sampling Technique
@@ -570,26 +598,131 @@ predictModels <- function(dtToModel, trainRatio = 0.75) {
 
 
 
-############        Accuracy Test
+############        Simple Accuracy Test - Modelling
 ## Input:   the dataset to be check
 ## Output:  a list of:
 #### numeric and factor column names
 #### Frequency tables of all FACTOR variables
 ## Use of Output: obtain the returned result
 ## TEST SETUP
-test_accuracyTestMode <- function() {
-  trainRatio <<- 0.75
-  dtToModel <<- canterCleansed
+test_simpleAccuracyTestModel <- function() {
+  modelResultList <- c("a", "b",)
+  predictionResult <-
+  modelMethod <- "ROSE"
 }
 ## FUNCTION BODY
-accuracyTestModel <- function() {
-  test_accuracyTestMode()
-  ROSE::accuracy.meas(testDT$cls, predROSE[,2])
-                      
-  roc.curve(testDT$Owner.size, predROSE[,2], plotit = F)
+simpleAccuracyTestModel <- function(modelMethod, predictionResult) {
+  # test_simpleAccuracyTestModel()
+   
+  expectedResult <- modelTestNAsExpectedDT$Owner.size
+  
+  ##  Simple accuracy
+  matchedCount <- length( which(expectedResult == predictionResult) )
+  modelAccuracy <- round(matchedCount / modelNALength, 2)
+  modelAccuracyList[[modelMethod]] <<- list( 
+    resultTable = data.table(expectedResult, predictionResult)
+    , accuracy = modelAccuracy)
 }
 
+
+############        Confusion Matrix Accuracy Test - Model
+## Input:   the dataset to be check
+## Output:  a list of:
+#### numeric and factor column names
+#### Frequency tables of all FACTOR variables
+## Use of Output: obtain the returned result
+## TEST SETUP
+test_confMatAccuracyTestModel <- function() {
+  modelResultList <- c("a", "b",)
+  predictionResult <-
+  modelMethod <- "ROSE"
+}
+## FUNCTION BODY
+confMatAccuracyTestModel <- function(predictionResult) {
+  # test_confMatAccuracyTestModel()
+   
+  expectedResult <- modelTestNAsExpectedDT$Owner.size
+  targetLevels <- levels(expectedResult)
+  modelResultConfMatList <- vector("list", length(targetLevels))
   
+  ##  Confusion Matrix
+  for (i in seq(1:length(targetLevels))) {
+    positive.class <- targetLevels[i]
+    # in the i-th iteration, use the i-th class as the positive class
+    modelResultConfMatList[[i]] <- confusionMatrix(expectedResult, predictionResult,
+                               positive = positive.class)
+  }
+  return(modelResultConfMatList)
+}
+
+############        Modelling Master
+## Input:   the dataset to be check
+## Output:  a list of:
+#### numeric and factor column names
+#### Frequency tables of all FACTOR variables
+## Use of Output: obtain the returned result
+## TEST SETUP
+test_modelMaster <- function() {
+  modelTrainRatio <- 0.75
+  dtToModel <- canterCleansed
+}
+## FUNCTION BODY
+modelMaster <- function(modelTrainRatio = 0.75) {
+ # test_modelMaster()
+ 
+ #### Impute NAs in Pruning variable
+ pruningImputeForm <- recipe(Pruning ~ . , data = canterCleansed) %>%
+   step_naomit(all_outcomes(), skip = TRUE) %>%
+   step_knnimpute(all_predictors())
+
+ pruningImputeTrained <- caret::train(pruningImputeForm, data = canterCleansed, method = "Rborist")
+ dtToPredict <- canterCleansed[ is.na(canterCleansed$Pruning), ]
+ pruningPredResult <- predict(pruningImputeTrained, newdata = dtToPredict)
+
+ ##  Merge prediction into canterCleansed
+ canterCleansed_t <- canterCleansed
+ canterCleansed_t[ is.na(canterCleansed_t$Pruning), ]$Pruning <- pruningPredResult
+ canterCleansed <<- canterCleansed_t
+ # View(canterCleansed)
+ #### Impute NAs in Pruning variable -- END
+  
+  # canterCleansedNoNA <<- na.omit(canterCleansed)
+  
+  # print(modelTrainRatio)
+  splitTrainTestModel(canterCleansed, modelTrainRatio)
+  
+  ##  Call the modelling methods
+  modelWithWeights()
+  modelWithRecipe()
+  modelWithROSE()
+  modelWithSMOTE()
+
+  ##  Obtain modelling results
+  modelAccuracyDT <<- data.table(method = names(modelAccuracyList)
+                                    , accuracy = NA_real_  )
+  
+  masterModelResultDT <<- data.table(method = character(), expectedResult = character()
+                                    , predictResult = character())
+  
+  ##  Unwrap to get result table and accuracy
+  for ( i in seq(1:length(names(modelAccuracyList))) ) {
+    currentSet <- modelAccuracyList[i]
+    methodName <- as.character(names(currentSet))
+    
+    unlistDT <- as.data.table(unlist(currentSet, recursive = FALSE))
+    v <- as.numeric(unique(unlistDT[, 3]))
+    ##  Take out accuracy column
+    resultDT <- unlistDT[, -3]
+    names(resultDT) <- c("expectedResult", "predictResult")
+    resultDT[, method := rep(methodName, nrow(resultDT)) ]
+    ## Form result table to add into master result table
+    resultDT <- setcolorder(resultDT, c("method","expectedResult","predictResult"))
+
+    masterModelResultDT <<- base::rbind(masterModelResultDT, resultDT)
+    modelAccuracyDT[ method == methodName, accuracy := v ]
+  }
+  # masterModelResultDT
+}
   
 ################## *******             BASIC DATA MANIPULATION *******              ##################
 
@@ -607,108 +740,38 @@ canterCleansed <<- canterSource[, sapply(canterSource, function(col) length(uniq
 canterCleansedColsType <<- classifyColTypes(canterCleansed)
 
 imputationAccuracyList <<- list()
+modelAccuracyList <<- list()
 
-##  INITIAL IMPUTATION CALL
+##  INITIAL IMPUTATION CALL, with default setup
+##  UNCOMMENT BELOW WHEN LIVE!
 imputeMaster(canterCleansed, 0.75, "Pruning")
 
-####      CALL MAIN FUNCTIONS
-# modelSplitTrainTest(canterCleansed, 0.75)
+##  INITIAL MODELLING CALL, with default setup
+modelMaster(0.75)
+# canterCleansed
+
+
 
 
 dev <- function() {
+######    Current scope - modelling
+  # View(canterCleansed)
+  View(unlist(modelResultConfMatROSE, recursive = FALSE))
+  print(modelResultConfMatROSE)
+  # View(predictionResult)
+  # attributes(predictionResult)
+  # class(predictionResult)
+  # str(predictionResult)
+  # dimnames(predictionResult)
+  objectInEnv <- ls(envir=.GlobalEnv)
+  objectInEnv[grep("model", objectInEnv)]
+  ?grep
   
-######    Current scope - Imputation
-pp <- caret::preProcess(x = canterCleansed, method = "knnImpute")
-t <- predict(pp, canterCleansed)
-View(t)
-dim(t)
-View(canterCleansed)
+  modelAccuracyList
+  modelAccuracyDT            
 
-colSums(is.na(canterCleansed))
-??colsum
-?predict
-install.packages("mice")
-library(mice)
-imputed_Data <- mice::mice(canterCleansed, m = 5, maxit = 50, method = 'pmm', print = FALSE)
-summary(imputed_Data$m)
-View(imputed_Data)
-names(canterCleansed)
-
-modset <- with(data = imputed_Data, exp = lm(Pruning ~ .)) 
-summary(modset)
-
-
-  View(canterCleansed)
-  names(canterCleansed)
- 
-  summary(canterCleansed)
-  summarytools::dfSummary(canterCleansed, style = "multiline")
-  ?gvisColumnChart
-  
-  data(MplsStops)
-    d <- MplsStops
-    limit <- 1000
-    if (nrow(d) > limit) {
-      d <- d[sample(1:nrow(d), limit),]
-    }
-    d <- d[order(d$idNum, decreasing = FALSE),]
-    View(d)
-    visdat::vis_dat(d)
-
-  install.packages("Amelia")    
-  library(Amelia)
-  amelia_sets <- Amelia::amelia(iris2, m = 5, noms = "Species")
-  summary(amelia_sets)
-  nrow(amelia_sets)
-  dim(iris2)
-  amelia_sets$imputations[[2]]
-  
-  t1 <- Amelia::amelia(trainDT, m = 5, noms = "Pruning")
-  
-  tt <- mice(trainDT)
-  tt$imp$Pruning
-  View(tt)
-  t2 <- complete(tt)
-  View(t2)
-  which(is.na(t2$Pruning))
-  ?which
-  imp <- mice(nhanes)
-imp
-
-library(caret, quietly = TRUE)
-pp <- caret::preProcess(x = trainDT, method = "knnImpute")
-pT <- predict(pp, trainDT)
-View(pT)
-is.na(pT$Pruning)
-# }
-# 
-test5Result <- train(Sepal.Length ~ . , data = iris_miss_5, method = "lm",
-           preProc = "knnImpute", na.action = na.pass)
-
-# NOT RUN {
-install.packages("mlr")
-library(mlr)
-df = data.frame(x = c(1, 1, NA), y = factor(c("a", "a", "b")), z = 1:3)
-imputed = impute(df, target = character(0), cols = list(x = 99, y = imputeMode()))
-print(imputed$data)
-reimpute(data.frame(x = NA_real_), imputed$desc)
-
-
-test5Result <- caret::train(Pruning ~ . , data = trainDT, method = "RFlda", 
-           preProc = "bagImpute", na.action = na.pass)
-head(test5Result)#ends in error
-
-library(rpart)
-install.packages("mlbench")
-data ("BostonHousing", package="mlbench")
-class_mod <- rpart(rad ~ . - medv, data=BostonHousing[!is.na(BostonHousing$rad), ], method="class", na.action=na.omit)  # since rad is a factor
-anova_mod <- rpart(ptratio ~ . - medv, data=BostonHousing[!is.na(BostonHousing$ptratio), ], method="anova", na.action=na.omit)  # since ptratio is numeric.
-rad_pred <- predict(class_mod, BostonHousing[is.na(BostonHousing$rad), ])
-ptratio_pred <- predict(anova_mod, BostonHousing[is.na(BostonHousing$ptratio), ])
-
-# }
-# 
 }
+
 
 
 
