@@ -15,7 +15,7 @@ shinyUI(dashboardPage(skin = "yellow"
         , menuItem("Explore data", tabName = "eda",icon = icon("studiovinari"))
         , menuItem("Imputation", tabName = "imputation", icon = icon("puzzle-piece"))
         , menuItem("Build models", tabName = "modelling",icon = icon("telegram-plane"))
-        # , menuItem("Multi-Level Classification", tabName = "classification", icon = icon("tree"))
+        , menuItem("Classification Visualization", tabName = "classification", icon = icon("tree"))
         , menuItem("Ending Project", tabName = "projectEnd", icon = icon("globe"))
     ))
     , dashboardBody(fluidRow(tabItems(
@@ -217,6 +217,11 @@ shinyUI(dashboardPage(skin = "yellow"
                                    , h3("See below for the modelling result for selected methods")
                                    , h4("It may take a moment (approximately 20 seconds) to load and update result 
                                         (when modelling training ratio is changed) - working on it!")
+                                   , div(
+                                       p("Looking at the result, I tend to use Recipe modelling method because it
+                                         has the highest accuracy among all, followed by Weighted, then ROSE and Simple.")
+                                       , p("More details can be found within in tab.")
+                                   )
                                    , dataTableOutput("modelAccuracyTable")
                                    , dataTableOutput("masterModelResultDT")
                                    
@@ -237,11 +242,6 @@ shinyUI(dashboardPage(skin = "yellow"
                           , tabPanel("Recipe Model"
                                      , verbatimTextOutput("modelConfMatRecipe")
                           ) 
-                          ###########             Modelling Decision Tab              ###########
-                          , tabPanel("Conclusion"
-                                     , p("My decision here is to use Recipe to impute missing values in Pruning variable given it has
-                                         high accuarcy across all methods and its flexibility.")
-                          )
                       ## Closure - Modelling Tab tabsetPanel
                       )
                       ## Closure - Modelling Tab mainPanel
@@ -252,22 +252,39 @@ shinyUI(dashboardPage(skin = "yellow"
         )
         ################## *******             CLASSIFICATION *******              ##################
         , tabItem(tabName = "classification"
-                  , sidebarLayout(
-                      sidebarPanel(width = 2
-                                   , checkboxInput("class", "Center Data", value = FALSE)
-                                   ## Closure - sidebarPanel
-                      )
-                      , mainPanel(tabsetPanel(
-                          ###########             Cleansed Data Visualization Tab              ###########
-                          tabPanel("Class Data Summary"
-                                   , h2("test")
-                          )
+                  # , sidebarLayout(
+                  #     sidebarPanel(width = 2
+                  #                  , checkboxInput("class", "Center Data", value = FALSE)
+                  #                  ## Closure - sidebarPanel
+                  #     )
+                  #     , mainPanel(
+                  , tabsetPanel(
+                      ###########             Cleansed Data Visualization Tab              ###########
+                      tabPanel("rPart Tree"
+                               , plotOutput("treeRPart")
+                               , div(
+                                   h2("Terminology explained:")
+                                   , div(
+                                       p("Age of stands: For each crop type and regime, contributors were asked to 
+                                           provide separate yield tables based on when the stand was planted.")
+                                       , p("Radiata pine has 4 tending regimes: Pruned without production thinning, Unpruned without production thinning
+                                       , Pruned with production thinning, Unpruned with production thinning.")
+                                       , p("Douglas-fir forest has 2 tending regimes: Without production thinning, With production thinning.")
+                                       , p("Log type specifications: Pruned, Unpruned, Pulp.")
+                                   )
+                                   , h2("Plot Reading")
+                                   , p("If the tree is planted per-1990 and Pruned, then it has 33% of probability of being in all stands category.")
+                                   , p("There are approximately 47% of the trees in this survey are planted pre-1990. This is concluded from the bottom layer of the tree.")
+                                   , p("Trees planted all stand has the second largest percentage in this analysis, approximately 33%.")
+                                   , p("Trees planted post-1989 has the least number in this survey. The approximate percentage is 21%.")
+                               )
+                               )
                           ## Closure - Classification mainPanel
-                      )
+                      # )
                       ## Closure - Classification Tab tabsetPanel
                       )
                       ## Closure - Classification Tab sidebarLayout
-                  )
+                  # )
                   ## Closure - Classification Tab
         )
         
@@ -282,7 +299,19 @@ shinyUI(dashboardPage(skin = "yellow"
                    , p("I learnt a lot about imputation methods and their implementation via this project!")
                    , h3("A more appropriate Data Science project design")
                    , div(
-                       p("blah")
+                       p("I knew Data Science involves Analysis (Statistical analysis) and programming (Computer Science).
+                       But I did not pay much attention to the beginning and the end sections.")
+                       , p("After completing this project, now I know at the beginning of a project, you MUST understand 
+                       the project background, propose the core question, and then find relevant data. EDA is not a simple 
+                       concept either. It turns out to be very important because it shows the hidden characteristic 
+                       (if right methods are applied!), it would guide you what to do next (missing data? class imbalance?).
+                       EDA is a skilled techniques because it requires attention to details, so that you can use the right 
+                       forms to convey obvious messages to yourself.")
+                       , p("I had been underestimated the power of EDA, thought it is a generic process to ALL projects. 
+                       But in this journey, I found EDA is similar to DNA - a pair might share exactly the same content, 
+                       but the chance is pretty low (good for confidence interval estimation thou!).")
+                       , p("I'm happy that I no longer using the same EDA techniques over my different projects, but 
+                           start tailoring and thinking over it for EACH project!")
                    )
                    , h2("Shiny")
                    , h3("Dynamic number of plots x googleVis Package")
@@ -307,12 +336,18 @@ shinyUI(dashboardPage(skin = "yellow"
                        , p("Next time I will write down the question on a piece of paper to remind myself what
                            I am trying to solve so that I would not be lost because of heavy and intensive development.")
                    )
+                   , h2("Useful Sites")
+                   , div(
+                       p("I found some very useful sites during the development.")
+                       , p("https://topepo.github.io/caret/train-models-by-tag.html#Robust_Model")
+                       , p("This site contains A LOT of methods that I can try in the future in terms of modelling.")
+                   )
             )
             , tabPanel("Remaining Work"
                        , h2("What can be improved")
                        , div(
-                           p("UI")
-                           , p("Table column names")
+                           p("UI - this is not very good at the moment.")
+                           , p("Table column names - make them more sensible.")
                            , p("Efficient and run time of some components. Store objects that are less likely to change
                                locall?")
             ))

@@ -26,7 +26,8 @@ library(ROSE, quietly = TRUE)
 ##############------------ TEST
 library(visdat, quietly = TRUE)
 library(carData, quietly = TRUE)
-
+library(rpart)
+library(rpart.plot)
 
 ################## *******             ASSISTING FUNCTIONS *******              ##################
 
@@ -717,8 +718,47 @@ modelMaster <- function(modelTrainRatio = 0.75) {
   # masterModelResultDT
 }
   
+################## *******             CLASSIFICATION VISUALIZATION *******              ##################
+########      Tree with Recipt model
+## TEST SETUP
+test_plotRecipeTree <- function() {
+  dtToPlot <- na.omit(canterCleansed)
+}
+## FUNCTION BODY
+plotRecipeTree <- function(dtToPlot) {
+  # test_plotRecipeTree()
 
+  recipeBalance <- recipe(Planting.coverage ~ ., data = dtToPlot ) %>%
+    step_downsample(all_outcomes(), ratio = 10, skip = FALSE) %>%
+    step_upsample(all_outcomes(), ratio = 1, skip = FALSE) %>%
+    prep(data = dtToPlot)
+  
+  balancedData <- bake(recipeBalance, dtToPlot)
+  # table(balancedData$Planting.coverage)
 
+  recipeFormula <- caret::train(Planting.coverage ~ ., data = dtToPlot, method = "rpart2", metric = "Accuracy",
+             trControl = trainControl(method = "boot", number = 20))
+  
+}
+
+########      PLOT GOOGLE VIS COLUMN CHART (BARCHART)
+## TEST SETUP
+test_plotRPartTree <- function() {
+  dtToPlot <- na.omit(canterCleansed)
+}
+## FUNCTION BODY
+plotRPartTree <- function(dtToPlot) {
+  # test_plotRPartTree()
+  simpleFormula <- Planting.coverage ~ .
+  simpleModel <- rpart(simpleFormula, data = modelTrainDT, method = "class")
+  
+  # Visualize the decision tree with rpart.plot
+  rpart.plot(simpleModel, box.palette="RdBu", shadow.col="gray", nn=TRUE
+             , main = "Decision Tree to answer: How long does the tree stand?")
+}
+
+ 
+  
 ################## *******             BASIC DATA MANIPULATION *******              ##################
 
 # Read in the data set

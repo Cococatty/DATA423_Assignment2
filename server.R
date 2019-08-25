@@ -195,10 +195,6 @@ shinyServer(function(input, output, session) {
     output$modelConfMatRecipe <- renderPrint({modelResultConfMatRecipe})
     output$modelSimpleTable <- renderPrint({modelTabSimple})
     
-  # modelResultConfMatROSE
-  # modelResultConfMatWeighted
-
-
     output$modelResultBarchart <- renderPlot({
       ggplot(modelAccuracyDT[ method %in% input$modelMethods, ], aes(method, weight = accuracy)) +
         geom_bar(fill = "#FF6666") +
@@ -210,7 +206,9 @@ shinyServer(function(input, output, session) {
     
     
     ################## *******             CLASSIFICATION *******              ##################
-    
+    output$treeRPart <- renderPlot({
+      plotRPartTree()
+    })
     
     
     ################## *******             PROJECT END *******              ##################
