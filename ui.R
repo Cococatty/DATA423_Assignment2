@@ -189,25 +189,56 @@ shinyUI(dashboardPage(skin = "yellow"
                                                  , min = 60, max = 95, value = 75
                                                  , step = 5, post = "%"
                                                  )
-                                   ## Closure - sidebarPanel
+                                   , selectizeInput("modelMethods", "Select to show corresponding imputation result"
+                                                    , choices = c("Simple", "ROSE", "Weighted",  "Recipe"), multiple = TRUE
+                                                    , selected = c("Simple", "ROSE", "Weighted", "Recipe")
+                                                    # "SMOTE",
+                                   )
+                                   # , selectInput("modelMethods", "Select to show corresponding imputation result"
+                                   #                  , choices = c("Simple", "ROSE")#, multiple = TRUE , "Weights", "SMOTE", "Recipe"
+                                   #                  , selected = c("Simple", "ROSE")
+                                   # )
+                                   # modelWithWeights()
+                                   # modelWithRecipe()
+                                   # modelWithROSE()
+                                   # modelWithSMOTE()
+                        ## Closure - sidebarPanel
                       )
                       , mainPanel(tabsetPanel(
                           ###########             Modelling Methods and Results Tab              ###########
                           tabPanel("Modelling Methods and Results"
-                                   ,p("Methods tested are: Class Weighting (Weighted), Random Over 
+                                   , div(
+                                       p("Methods tested are: Class Weighting (Weighted), Random Over 
                                       Sampling Examples (ROSE), Synthetic Minority Over-sampling Technique (SMOTE), ")
+                                       , p("Unfortunately, SMOTE is not available in this application because of heavy 
+                                       RAM consumption.")
+                                       , p("However, relevant development code can be find in files.")
+                                   )
                                    , h3("See below for the modelling result for selected methods")
                                    , h4("It may take a moment (approximately 20 seconds) to load and update result 
                                         (when modelling training ratio is changed) - working on it!")
-                                   # , dataTableOutput("modelAccuracyTable")
-                                   # , dataTableOutput("masterModelResultDT")
-                                   # , verbatimTextOutput("modelConfMatRecipe")
+                                   , dataTableOutput("modelAccuracyTable")
+                                   , dataTableOutput("masterModelResultDT")
+                                   
                           )
+                          ###########             Simple Modelling Tab              ###########
+                          , tabPanel("Simple Model"
+                                     , verbatimTextOutput("modelSimpleTable")
+                          )
+                          ###########             Weighted Modelling Tab              ###########
+                          , tabPanel("Weighted Model"
+                                     , verbatimTextOutput("modelConfMatWeighted")
+                          )
+                          ###########             ROSE Modelling Tab              ###########
+                          , tabPanel("ROSE Model"
+                                     , verbatimTextOutput("modelConfMatROSE")
+                          )
+                          ###########             Recipe Modelling Tab              ###########
+                          , tabPanel("Recipe Model"
+                                     , verbatimTextOutput("modelConfMatRecipe")
+                          ) 
                           ###########             Modelling Decision Tab              ###########
-                          , tabPanel("Model Decision"
-                                     # , h3("")
-                                     # , plotOutput("modelResultBarchart")
-                                     , h3("Decision")
+                          , tabPanel("Conclusion"
                                      , p("My decision here is to use Recipe to impute missing values in Pruning variable given it has
                                          high accuarcy across all methods and its flexibility.")
                           )
@@ -266,6 +297,15 @@ shinyUI(dashboardPage(skin = "yellow"
                        p("Previously, I write report text in server.R, then use the output function in ui.R for display purpose.
                          However, I found out I can write the text in ui.R with HTML tags! This is great because it has reduced
                          unreuqired code and efficient has improved, at the same time, it has further extended my HTML skill!")
+                   )
+                   , h2("Keep in mind of what you are doing!")
+                   , div(
+                       p("During the development, my modelling methods were 'not' working when I tested
+                       in in Shiny application, thought they were working fine on local (with R session restarted).")
+                       , p("I almost gave up on these modellings though it took me a while to write. But then I noticed
+                           I used the wrong outcome variable to these methods!")
+                       , p("Next time I will write down the question on a piece of paper to remind myself what
+                           I am trying to solve so that I would not be lost because of heavy and intensive development.")
                    )
             )
             , tabPanel("Remaining Work"

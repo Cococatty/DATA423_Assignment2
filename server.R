@@ -189,9 +189,12 @@ shinyServer(function(input, output, session) {
       modelAccuracyDT[ method %in% input$modelMethods, ]
       ## TBD  - to change var to input?
     })
-
-  #   output$modelConfMatRecipe <- renderPrint({modelResultConfMatRecipe})
-
+    
+    output$modelConfMatROSE <- renderPrint({modelResultConfMatROSE})
+    output$modelConfMatWeighted <- renderPrint({modelResultConfMatWeighted})
+    output$modelConfMatRecipe <- renderPrint({modelResultConfMatRecipe})
+    output$modelSimpleTable <- renderPrint({modelTabSimple})
+    
   # modelResultConfMatROSE
   # modelResultConfMatWeighted
 
@@ -209,14 +212,7 @@ shinyServer(function(input, output, session) {
     ################## *******             CLASSIFICATION *******              ##################
     
     
-    ################## *******             DEFINITION *******              ##################
-    # output$defTextCoreQuestion <- renderPrint({ 
-    # paste("The second milestone is to setup the CORE question: what do I want to solve in this project?"
-    #       , "Inspired"                                       
-    #       , sep = "\n"
-    # )})
-    # 
-    # 
+    
     ################## *******             PROJECT END *******              ##################
     
 

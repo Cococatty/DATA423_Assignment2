@@ -20,6 +20,7 @@ library(randomForest, quietly = TRUE)
 library(naniar, quietly = TRUE)
 library(recipes, quietly = TRUE)
 library(caret, quietly = TRUE)
+library(Rborist, quietly = TRUE)
 library(mice, quietly = TRUE)
 library(ROSE, quietly = TRUE)
 ##############------------ TEST
@@ -66,7 +67,7 @@ test_plotGVisColChart <- function() {
   dtToClassify <<- canterCleansed
   colInfoList <<- canterCleansedColsType
   factorList <<- colInfoList$factorCols
-  i <<- "Owner.size"
+  i <<- "Planting.coverage"
 }
 ## FUNCTION BODY
 plotGVisColChart <- function(dataToPlot, colInfoList) {
@@ -331,89 +332,47 @@ imputeMaster <- function(dtToImpute, imputeTrainRatio, varToImpute) {
 ## TEST SETUP
 test_splitTrainTestModel <- function() {
   modelTrainRatio <- 0.75
-  dtToModel <- canterCleansed
+  dtToModel <- canterCleansedNoNA
   colInfo <- canterCleansedColsType
 }
 ## FUNCTION BODY
 splitTrainTestModel <- function(dtToModel, modelTrainRatio = 0.75) {
   # test_splitTrainTestModel()
-  
+
+  dtToModel <- canterCleansedNoNA
   modelRowsLength <<- nrow(dtToModel)
-  maxNumToMatch <<- max(table(dtToModel[ "Owner.size" ]))
+  maxNumToMatch <<- max(table(dtToModel[ "Planting.coverage" ]))
   ## Calculate sample size
   trainLength <<- floor(nrow(dtToModel) * modelTrainRatio)
 
   ## split data by modelTrainRatio
   set.seed(100)
-  trainIndexSet <<- sample(seq_len(nrow(dtToModel)), size = trainLength)
+  
+  sourceLevels <- levels(dtToModel$Planting.coverage)
+  trainIndexSet_a <- sample(seq_len(nrow(dtToModel)), size = trainLength)
+  validTrainDT <- dtToModel[trainIndexSet_a, ]
+  outcomeLevels <- levels(droplevels(validTrainDT$Planting.coverage))
+  # i <- sourceLevels[1]
+  
+  while (length(outcomeLevels) != length(sourceLevels) ) {
+    trainIndexSet_a <- sample(seq_len(nrow(dtToModel)), size = trainLength)
+    validTrainDT <- dtToModel[trainIndexSet_a, ]
+    outcomeLevels <- levels(droplevels(validTrainDT$outcomeLevels))
+  }
+  
+  trainIndexSet <<- trainIndexSet_a
   modelTrainDT <<- dtToModel[trainIndexSet, ]
   modelTrainNAsDT_t <- modelTrainDT
-  # modelTrainNAsDT_t <-
-  # modelTrainNAsDT <<- 
-  # nrow(modelTestDT)
-  # anyNA(modelTrainDT)
   modelTestDT <<- dtToModel[-trainIndexSet, ]
   modelTestNAIndex <<- sample(seq_len(nrow(modelTestDT)), size = nrow(modelTestDT) * (1-modelTrainRatio))
   modelNALength <<- length(modelTestNAIndex)
   modelTestNAsDT_t <- modelTestDT[modelTestNAIndex, ]
   modelTestNAsExpectedDT <<- modelTestDT[modelTestNAIndex, ]
-  modelTestNAsDT_t$Owner.size <- NA
+  modelTestNAsDT_t$Planting.coverage <- NA
   modelTestNAsDT <<- modelTestNAsDT_t
   # View(modelTestDT)
 }
 
-############        Model with Purely Under-sampling
-## Input:   the dataset to be check
-## Output:  a list of:
-#### numeric and factor column names
-#### Frequency tables of all FACTOR variables
-## Use of Output: obtain the returned result
-## TEST SETUP
-test_modelWithUnderSample <- function() {
-  modelTrainRatio <- 0.75
-  dtToModel <- canterCleansed
-  splitTrainTestModel(dtToModel, modelTrainRatio)
-}
-## FUNCTION BODY
-modelWithUnderSample <- function() {
-  # test_modelWithUnderSample()
-  
-  modelTrainDT$Owner.size
-  View(modelTrainDT)
-  anyNA(modelTrainDT)
-  is.factor(modelTrainDT$Pruning)
-  levels(modelTrainDT$Owner.size)
-  underSampledTrainDT <- ovun.sample(Owner.size ~ ., data = modelTrainDT, method = "under"
-                                     , N = maxNumToMatch)$data
-  table(underSampledTrainDT$Owner.size)
-}
-  
-
-
-############        Model with Purely Over-sampling
-## Input:   the dataset to be check
-## Output:  a list of:
-#### numeric and factor column names
-#### Frequency tables of all FACTOR variables
-## Use of Output: obtain the returned result
-## TEST SETUP
-test_modelWithOverSample <- function() {
-  trainRatio <<- 0.75
-  dtToModel <<- canterCleansed
-}
-## FUNCTION BODY
-modelWithOverSample <- function(dtToModel, trainRatio = 0.75) {
-  test_modelWithOverSample()
-
-  data_balanced_over <- ovun.sample(Owner.size ~ ., data = trainDT
-                                    , method = "over", N = modelRowsLength)$data
-  table(data_balanced_over$Owner.size)
-
-  roc.curve(hacide.test$cls, pred.treeimb[,2], plotit = F)
-}
-  
-  
-  
 ############        Model with Recipe (Over and Under Samplings)
 ## Input:   the dataset to be check
 ## Output:  a list of:
@@ -429,17 +388,17 @@ test_modelWithRecipe <- function() {
 modelWithRecipe <- function() {
   # test_modelWithRecipe()
 
-  # canterCleansedColsType$freqTblList$Owner.size
-
-  recipeBalance <- recipe(Owner.size ~ ., data = modelTrainDT) %>%
+  # canterCleansedColsType$freqTblList$outcomeLevels
+  tempDT <- na.omit(modelTrainDT)
+  recipeBalance <- recipe(Planting.coverage ~ ., data = tempDT) %>%
     step_downsample(all_outcomes(), ratio = 10, skip = FALSE) %>%
     step_upsample(all_outcomes(), ratio = 1, skip = FALSE) %>%
-    prep(data = modelTrainDT)
+    prep(data = tempDT)
   
-  balancedData <- bake(recipeBalance, modelTrainDT)
-  # table(balancedData$Owner.size)
+  balancedData <- bake(recipeBalance, tempDT)
+  # table(balancedData$Planting.coverage)
 
-  recipeFormula <- caret::train(Owner.size ~ ., data = balancedData, method = "rpart2", metric = "Accuracy",
+  recipeFormula <- caret::train(Planting.coverage ~ ., data = balancedData, method = "rpart2", metric = "Accuracy",
              trControl = trainControl(method = "boot", number = 20))
 
   predictionResult <- predict(recipeFormula, modelTestNAsDT)
@@ -463,14 +422,15 @@ test_modelWithWeights <- function() {
 ## FUNCTION BODY
 modelWithWeights <- function() {
   # test_modelWithWeights()
-  tab <- table(modelTrainDT$Owner.size)
-  weightToGet <- rep(1, times = nrow(modelTrainDT))
+  tempDT <- modelTrainDT
+  tab <- table(tempDT$Planting.coverage)
+  weightToGet <- rep(1, times = nrow(tempDT))
   
   for (level in names(tab)) {
-    weightToGet[modelTrainDT$Owner.size == level] <- sum(tab) / tab[[level]]
+    weightToGet[tempDT$Planting.coverage == level] <- sum(tab) / tab[[level]]
   }
   
-  weightFormular <- caret::train(Owner.size ~ ., data = modelTrainDT, method = "rpart2", metric = "Accuracy"
+  weightFormular <- caret::train(Planting.coverage ~ ., data = tempDT, method = "rpart2", metric = "Accuracy"
                                  , trControl = trainControl(method = "boot", number = 20)
                                  , weights = weightToGet)
   
@@ -497,8 +457,8 @@ test_modelWithROSE <- function() {
 ## FUNCTION BODY
 modelWithROSE <- function() {
   # test_modelWithWeights()
-  
-  roseFormula <- rpart(Owner.size ~ ., data = modelTrainDT)
+  tempDT <- modelTrainDT
+  roseFormula <- rpart(Planting.coverage ~ ., data = tempDT)
   predictionResult <- predict(roseFormula, newdata = modelTestNAsDT, type = "class")
   
   ##  Accuracy feedback
@@ -524,19 +484,19 @@ test_modelWithSMOTE <- function() {
 ## FUNCTION BODY
 modelWithSMOTE <- function() {
   # test_modelWithSMOTE()
-  
+  # temp <- modelTrainDT
   smoteCtrl <- trainControl(method = "repeatedcv", number = 10, repeats = 10
                        , verboseIter = FALSE, sampling = "smote")
   
   set.seed(100)
-  smoteFormula <- caret::train(Owner.size ~ .,
+  smoteFormula <- caret::train(Planting.coverage ~ .,
                                 data = modelTrainDT,
-                                method = "rf",
+                                method = "rf",# bartMachine
                                 preProcess = c("scale", "center"),
                                 trControl = smoteCtrl)
   # Large-scale forests
   predictionResult <- predict(smoteFormula, newdata = modelTestNAsDT, type = "prob")
-  expectedResult <- modelTestNAsExpectedDT$Owner.size
+  expectedResult <- modelTestNAsExpectedDT$Planting.coverage
   resultMatrixSMOTE <<- data.table(actual = expectedResult, predictionResult)
   
   predictValues <- colnames(resultMatrixSMOTE)[apply(resultMatrixSMOTE, 1, which.max)]
@@ -545,6 +505,37 @@ modelWithSMOTE <- function() {
   simpleAccuracyTestModel("SMOTE", predictValues)
   # modelAccuracyList$SMOTE
 }
+
+
+############        Model with Synthetic Minority Over-sampling Technique
+## Input:   the dataset to be check
+## Output:  a list of:
+#### numeric and factor column names
+#### Frequency tables of all FACTOR variables
+## Use of Output: obtain the returned result
+## TEST SETUP
+test_modelWithSimple <- function() {
+  modelTrainRatio <- 0.75
+  dtToModel <- canterCleansed
+  splitTrainTestModel(dtToModel, modelTrainRatio)
+  i <- 1
+}
+## FUNCTION BODY
+modelWithSimple <- function() {
+  # test_modelWithSimple()
+  simpleFormula <- Planting.coverage ~ .
+  simpleModel <- rpart(simpleFormula, data = modelTrainDT, method = "class")
+  predictionResult <- predict(simpleModel, newdata = modelTestNAsDT)
+  predictionValues <- colnames(predictionResult)[apply(predictionResult, 1, which.max)]
+  simpleResultDT <<- data.table(expectedResult = modelTestNAsExpectedDT$Planting.coverage
+                                , predictionResult = predictionValues)
+  
+  simpleAccuracyTestModel("Simple", predictionValues)
+  # confMatAccuracyTestModel(predictionResult)
+  modelTabSimple <<- table(actual = modelTestNAsExpectedDT$Planting.coverage
+                           , predict = predictionValues)
+}
+
 
 ############        Model with Synthetic Minority Over-sampling Technique
 ## Input:   the dataset to be check
@@ -614,7 +605,7 @@ test_simpleAccuracyTestModel <- function() {
 simpleAccuracyTestModel <- function(modelMethod, predictionResult) {
   # test_simpleAccuracyTestModel()
    
-  expectedResult <- modelTestNAsExpectedDT$Owner.size
+  expectedResult <- modelTestNAsExpectedDT$Planting.coverage
   
   ##  Simple accuracy
   matchedCount <- length( which(expectedResult == predictionResult) )
@@ -641,7 +632,7 @@ test_confMatAccuracyTestModel <- function() {
 confMatAccuracyTestModel <- function(predictionResult) {
   # test_confMatAccuracyTestModel()
    
-  expectedResult <- modelTestNAsExpectedDT$Owner.size
+  expectedResult <- modelTestNAsExpectedDT$Planting.coverage
   targetLevels <- levels(expectedResult)
   modelResultConfMatList <- vector("list", length(targetLevels))
   
@@ -656,7 +647,7 @@ confMatAccuracyTestModel <- function(predictionResult) {
 }
 
 ############        Modelling Master
-## Input:   the dataset to be check
+## Input:   training ratio
 ## Output:  a list of:
 #### numeric and factor column names
 #### Frequency tables of all FACTOR variables
@@ -671,31 +662,33 @@ modelMaster <- function(modelTrainRatio = 0.75) {
  # test_modelMaster()
  
  #### Impute NAs in Pruning variable
- pruningImputeForm <- recipe(Pruning ~ . , data = canterCleansed) %>%
-   step_naomit(all_outcomes(), skip = TRUE) %>%
-   step_knnimpute(all_predictors())
-
- pruningImputeTrained <- caret::train(pruningImputeForm, data = canterCleansed, method = "Rborist")
- dtToPredict <- canterCleansed[ is.na(canterCleansed$Pruning), ]
- pruningPredResult <- predict(pruningImputeTrained, newdata = dtToPredict)
+ # pruningImputeForm <- recipe(Pruning ~ . , data = canterCleansed) %>%
+ #   step_naomit(all_outcomes(), skip = TRUE) %>%
+ #   step_knnimpute(all_predictors())
+ # 
+ # pruningImputeTrained <- caret::train(pruningImputeForm, data = canterCleansed, method = "Rborist")
+ # dtToPredict <- canterCleansed[ is.na(canterCleansed$Pruning), ]
+ # pruningPredResult <- predict(pruningImputeTrained, newdata = dtToPredict)
 
  ##  Merge prediction into canterCleansed
- canterCleansed_t <- canterCleansed
- canterCleansed_t[ is.na(canterCleansed_t$Pruning), ]$Pruning <- pruningPredResult
- canterCleansed <<- canterCleansed_t
+ # canterCleansed_t <- canterCleansed
+ # canterCleansed_t[ is.na(canterCleansed_t$Pruning), ]$Pruning <- pruningPredResult
+ # canterCleansed <<- canterCleansed_t
  # View(canterCleansed)
  #### Impute NAs in Pruning variable -- END
   
-  # canterCleansedNoNA <<- na.omit(canterCleansed)
+  canterCleansedNoNA <<- na.omit(canterCleansed)
   
   # print(modelTrainRatio)
-  splitTrainTestModel(canterCleansed, modelTrainRatio)
+  # splitTrainTestModel(canterCleansed, modelTrainRatio)
+  splitTrainTestModel(canterCleansedNoNA, modelTrainRatio)
   
   ##  Call the modelling methods
+  modelWithSimple()
   modelWithWeights()
   modelWithRecipe()
   modelWithROSE()
-  modelWithSMOTE()
+  # modelWithSMOTE()
 
   ##  Obtain modelling results
   modelAccuracyDT <<- data.table(method = names(modelAccuracyList)
@@ -724,6 +717,8 @@ modelMaster <- function(modelTrainRatio = 0.75) {
   # masterModelResultDT
 }
   
+
+
 ################## *******             BASIC DATA MANIPULATION *******              ##################
 
 # Read in the data set
@@ -776,3 +771,56 @@ dev <- function() {
 
 
 
+
+############        Model with Purely Under-sampling
+## Input:   the dataset to be check
+## Output:  a list of:
+#### numeric and factor column names
+#### Frequency tables of all FACTOR variables
+## Use of Output: obtain the returned result
+## TEST SETUP
+# test_modelWithUnderSample <- function() {
+#   modelTrainRatio <- 0.75
+#   dtToModel <- canterCleansed
+#   splitTrainTestModel(dtToModel, modelTrainRatio)
+# }
+# ## FUNCTION BODY
+# modelWithUnderSample <- function() {
+#   # test_modelWithUnderSample()
+#   
+#   modelTrainDT$Planting.coverage
+#   View(modelTrainDT)
+#   anyNA(modelTrainDT)
+#   is.factor(modelTrainDT$Pruning)
+#   levels(modelTrainDT$Planting.coverage)
+#   underSampledTrainDT <- ovun.sample(Planting.coverage ~ ., data = modelTrainDT, method = "under"
+#                                      , N = maxNumToMatch)$data
+#   table(underSampledTrainDT$Planting.coverage)
+# }
+#   
+# 
+# 
+# ############        Model with Purely Over-sampling
+# ## Input:   the dataset to be check
+# ## Output:  a list of:
+# #### numeric and factor column names
+# #### Frequency tables of all FACTOR variables
+# ## Use of Output: obtain the returned result
+# ## TEST SETUP
+# test_modelWithOverSample <- function() {
+#   trainRatio <<- 0.75
+#   dtToModel <<- canterCleansed
+# }
+# ## FUNCTION BODY
+# modelWithOverSample <- function(dtToModel, trainRatio = 0.75) {
+#   test_modelWithOverSample()
+# 
+#   data_balanced_over <- ovun.sample(Planting.coverage ~ ., data = trainDT
+#                                     , method = "over", N = modelRowsLength)$data
+#   table(data_balanced_over$Planting.coverage)
+# 
+#   roc.curve(hacide.test$cls, pred.treeimb[,2], plotit = F)
+# }
+  
+  
+    # print("I'm here!")
