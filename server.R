@@ -178,6 +178,19 @@ shinyServer(function(input, output, session) {
         modelAccuracyDT[ method %in% input$modelMethods, ]
       ## TBD  - to change var to input?
       })
+      
+      output$modelConfMatROSE <- renderPrint({modelResultConfMatROSE})
+      output$modelConfMatWeighted <- renderPrint({modelResultConfMatWeighted})
+      output$modelConfMatRecipe <- renderPrint({modelResultConfMatRecipe})
+      output$modelSimpleTable <- renderPrint({modelTabSimple})
+      
+      output$modelResultBarchart <- renderPlot({
+        ggplot(modelAccuracyDT[ method %in% input$modelMethods, ], aes(method, weight = accuracy)) +
+          geom_bar(fill = "#FF6666") +
+          xlab("Selected Modelling Methods") +
+          ylab("Accuracy in Percentage") +
+          labs(title = "Accuracy visual comparsion between selected methods")
+      })
     })
 
     output$masterModelResultDT <- renderDataTable({
@@ -203,7 +216,6 @@ shinyServer(function(input, output, session) {
         labs(title = "Accuracy visual comparsion between selected methods")
     })
 
-    
     
     ################## *******             CLASSIFICATION *******              ##################
     output$treeRPart <- renderPlot({

@@ -35,6 +35,10 @@ shinyUI(dashboardPage(skin = "yellow"
                              project as well.")
                          , p("[1] Amazon rainforest, Wikipedia, retrieved from https://en.wikipedia.org/wiki/Amazon_rainforest on 
                              18th August 2019")
+                         , p("[2] Image is from Amazon rainforest fire, Express Newspapers, retrieved from 
+                             https://www.express.co.uk/news/world/1168299/amazon-rainforest-fire-how-did-amazon-fires-start-cause-deforestation-how-long-fire
+                              on 18th August 2019")
+                         # https\:\/\/www.express.co.uk\/news\/world\/1168299\/amazon-rainforest-fire-how-did-amazon-fires-start-cause-deforestation-how-long-fire 
                      )
                      )
             , tabPanel("Information Gathering"
@@ -42,8 +46,8 @@ shinyUI(dashboardPage(skin = "yellow"
                            p("I did some information search regarding to forest fire in the world, unfortunately, there are
                              very few datasets meeting both my and the assignment requirements.")
                            , p("Therefore, I changed my project topic to forestry, which is still relevant to both environmentally friendly.
-                           And then I found an good dataset from Te Rākau Rakau, Forestry New Zealand, regarding to New Zealand's forests [2].")
-                           , p("[2] New Zealand\'s forests, Te Uru Rākau, Forestry New Zealand, retrieved from https://www.teururakau.govt.nz/news-and-resources/open-data-and-forecasting/forestry/new-zealands-forests/ on 
+                           And then I found an good dataset from Te Rākau Rakau, Forestry New Zealand, regarding to New Zealand's forests [3].")
+                           , p("[3] New Zealand\'s forests, Te Uru Rākau, Forestry New Zealand, retrieved from https://www.teururakau.govt.nz/news-and-resources/open-data-and-forecasting/forestry/new-zealands-forests/ on 
                              20th August 2019")
                        )
                      )
@@ -209,16 +213,7 @@ shinyUI(dashboardPage(skin = "yellow"
                                    , selectizeInput("modelMethods", "Select to show corresponding imputation result"
                                                     , choices = c("Simple", "ROSE", "Weighted",  "Recipe"), multiple = TRUE
                                                     , selected = c("Simple", "ROSE", "Weighted", "Recipe")
-                                                    # "SMOTE",
                                    )
-                                   # , selectInput("modelMethods", "Select to show corresponding imputation result"
-                                   #                  , choices = c("Simple", "ROSE")#, multiple = TRUE , "Weights", "SMOTE", "Recipe"
-                                   #                  , selected = c("Simple", "ROSE")
-                                   # )
-                                   # modelWithWeights()
-                                   # modelWithRecipe()
-                                   # modelWithROSE()
-                                   # modelWithSMOTE()
                         ## Closure - sidebarPanel
                       )
                       , mainPanel(tabsetPanel(
@@ -245,24 +240,32 @@ shinyUI(dashboardPage(skin = "yellow"
                           )
                           ###########             Simple Modelling Tab              ###########
                           , tabPanel("Simple Model"
+                                     , h4("It may take a moment (approximately 20 seconds) to load and update result 
+                                        (when modelling training ratio is changed) - working on it!")
                                      , p("As shown in the first tab, Simple multi-class classification does not have very 
                                          good accuracy.")
                                      , verbatimTextOutput("modelSimpleTable")
                           )
                           ###########             Weighted Modelling Tab              ###########
                           , tabPanel("Weighted Model"
+                                     , h4("It may take a moment (approximately 20 seconds) to load and update result 
+                                        (when modelling training ratio is changed) - working on it!")
                                      , p("Weighted model has better accuracy rate than Simple, but its accuracy rate is only at 0.64
                                          (2 decimal places) which is not good either.")
                                      , verbatimTextOutput("modelConfMatWeighted")
                           )
                           ###########             ROSE Modelling Tab              ###########
                           , tabPanel("ROSE Model"
+                                     , h4("It may take a moment (approximately 20 seconds) to load and update result 
+                                        (when modelling training ratio is changed) - working on it!")
                                      , p("ROSE model has similar accuracy rate as Simple, its Overall Statistics indicates
                                      its accuracy rate is approximately 0.55 (2 decimal places) which is not good.")
                                      , verbatimTextOutput("modelConfMatROSE")
                           )
                           ###########             Recipe Modelling Tab              ###########
                           , tabPanel("Recipe Model"
+                                     , h4("It may take a moment (approximately 20 seconds) to load and update result 
+                                        (when modelling training ratio is changed) - working on it!")
                                      , p("Recipe model has the best accuracy rate among all. Its Overall Statistics indicates
                                      its accuracy rate is approximately 0.73 (2 decimal places) which is reasonably good.")
                                      , verbatimTextOutput("modelConfMatRecipe")
@@ -281,6 +284,8 @@ shinyUI(dashboardPage(skin = "yellow"
                   # , tabsetPanel(
                       ###########             Cleansed Data Visualization Tab              ###########
                       , tabPanel("rPart Tree"
+                                 , h4("It may take a moment (approximately 20 seconds) to load and update result 
+                                        (when modelling training ratio is changed) - working on it!")
                                , plotOutput("treeRPart")
                                , div(
                                    h2("Terminology explained:")
@@ -293,6 +298,8 @@ shinyUI(dashboardPage(skin = "yellow"
                                        , p("Log type specifications: Pruned, Unpruned, Pulp.")
                                    )
                                    , h2("Plot Reading")
+                                   , p("********** Please note this tree plot is a 'live' plot which means its figures and percentages would be slightly different each 
+                                       time the application is loaded. Therefore, reading below are more of reference to demostration I understand the plot.")
                                    , p("If the tree is planted per-1990 and Pruned, then it has 33% of probability of being in all stands category.")
                                    , p("There are approximately 47% of the trees in this survey are planted pre-1990. This is concluded from the bottom layer of the tree.")
                                    , p("Trees planted all stand has the second largest percentage in this analysis, approximately 33%.")
@@ -372,6 +379,9 @@ shinyUI(dashboardPage(skin = "yellow"
                        , p("Table column names - make them more sensible.")
                        , p("Efficient and run time of some components. Store objects that are less likely to change
                            locall?")
+                       , p("Decision tree - it's currently too small that it is not very helpful. Also, I did consider 
+                           exporting the plot because the plot and its figure would change each time application is run
+                           (though figure difference should not be large). But I keep it 'live' as for demostration purpose.")
                        )
                    )
         ###########             Potential Extension Tab              ###########

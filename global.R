@@ -740,7 +740,7 @@ plotRecipeTree <- function(dtToPlot) {
 ########      PLOT GOOGLE VIS COLUMN CHART (BARCHART)
 ## TEST SETUP
 test_plotRPartTree <- function() {
-  dtToPlot <- na.omit(canterCleansed)
+  dtToPlot <- canterCleansedNoNA
 }
 ## FUNCTION BODY
 plotRPartTree <- function(dtToPlot) {
