@@ -403,7 +403,7 @@ modelWithRecipe <- function() {
              trControl = trainControl(method = "boot", number = 20))
 
   predictionResult <- predict(recipeFormula, modelTestNAsDT)
-
+  predictionResultRecipe <<- predictionResult
   ##  Accuracy feedback
   simpleAccuracyTestModel("Recipe", predictionResult)
   modelResultConfMatRecipe <<- confMatAccuracyTestModel(predictionResult)
@@ -662,26 +662,22 @@ test_modelMaster <- function() {
 modelMaster <- function(modelTrainRatio = 0.75) {
  # test_modelMaster()
  
- #### Impute NAs in Pruning variable
- # pruningImputeForm <- recipe(Pruning ~ . , data = canterCleansed) %>%
- #   step_naomit(all_outcomes(), skip = TRUE) %>%
- #   step_knnimpute(all_predictors())
- # 
- # pruningImputeTrained <- caret::train(pruningImputeForm, data = canterCleansed, method = "Rborist")
- # dtToPredict <- canterCleansed[ is.na(canterCleansed$Pruning), ]
- # pruningPredResult <- predict(pruningImputeTrained, newdata = dtToPredict)
-
- ##  Merge prediction into canterCleansed
- # canterCleansed_t <- canterCleansed
- # canterCleansed_t[ is.na(canterCleansed_t$Pruning), ]$Pruning <- pruningPredResult
- # canterCleansed <<- canterCleansed_t
- # View(canterCleansed)
- #### Impute NAs in Pruning variable -- END
+  #### Impute NAs in Pruning variable
+  canterCleansedNoNATrain <- na.omit(canterCleansed)
+  canterCleansedCopy <- canterCleansed
+ 
+  recipeImputeForm <- recipe(Pruning ~ . , data = canterCleansedNoNATrain) %>% 
+    step_naomit(all_outcomes(), skip = TRUE) %>%
+    step_knnimpute(all_predictors())  
   
-  canterCleansedNoNA <<- na.omit(canterCleansed)
+  recipeImputeTrained <- caret::train(recipeImputeForm, data = canterCleansedNoNATrain, method = "rf")
+  recipePredResult <- predict( recipeImputeTrained, newdata = canterCleansed[ is.na(canterCleansed$Pruning), ] )
   
-  # print(modelTrainRatio)
-  # splitTrainTestModel(canterCleansed, modelTrainRatio)
+  canterCleansedCopy[ is.na(canterCleansedCopy$Pruning), "Pruning"] <- recipePredResult
+  canterCleansedNoNA <<- canterCleansedCopy
+  #### Impute NAs in Pruning variable -- END
+  
+  # canterCleansedNoNA <<- na.omit(canterCleansed)
   splitTrainTestModel(canterCleansedNoNA, modelTrainRatio)
   
   ##  Call the modelling methods
@@ -864,3 +860,4 @@ dev <- function() {
   
   
     # print("I'm here!")
+    
